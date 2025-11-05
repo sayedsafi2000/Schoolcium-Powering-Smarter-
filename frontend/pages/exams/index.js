@@ -1,14 +1,20 @@
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/router'
 import Link from 'next/link'
 import axios from 'axios'
 
 export default function Exams({ user }) {
+  const router = useRouter()
   const [exams, setExams] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (user?.role === 'student') {
+      router.push('/')
+      return
+    }
     fetchExams()
-  }, [])
+  }, [user])
 
   const fetchExams = async () => {
     try {
@@ -30,7 +36,9 @@ export default function Exams({ user }) {
     <div className="page-container">
       <div className="page-header">
         <h1>Exams</h1>
-        <Link href="/exams/new" className="btn btn-primary">Create Exam</Link>
+        {(user?.role === 'admin' || user?.role === 'teacher') && (
+          <Link href="/exams/new" className="btn btn-primary">Create Exam</Link>
+        )}
       </div>
       <table className="data-table">
         <thead>

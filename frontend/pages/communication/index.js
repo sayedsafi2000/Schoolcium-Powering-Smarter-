@@ -53,18 +53,19 @@ export default function Communication({ user }) {
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           <Link href="/communication/new" className="btn btn-primary">New Announcement</Link>
           <div>
-          <button
-            className={`btn ${activeTab === 'announcements' ? 'btn-primary' : 'btn-secondary'}`}
-            onClick={() => setActiveTab('announcements')}
-          >
-            Announcements
-          </button>
-          <button
-            className={`btn ${activeTab === 'messages' ? 'btn-primary' : 'btn-secondary'}`}
-            onClick={() => setActiveTab('messages')}
-          >
-            Messages
-          </button>
+            <button
+              className={`btn ${activeTab === 'announcements' ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => setActiveTab('announcements')}
+            >
+              Announcements
+            </button>
+            <button
+              className={`btn ${activeTab === 'messages' ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => setActiveTab('messages')}
+            >
+              Messages
+            </button>
+          </div>
         </div>
       </div>
       {activeTab === 'announcements' ? (

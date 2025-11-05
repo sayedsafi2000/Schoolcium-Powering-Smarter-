@@ -1,14 +1,20 @@
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/router'
 import Link from 'next/link'
 import axios from 'axios'
 
 export default function Students({ user }) {
+  const router = useRouter()
   const [students, setStudents] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (user?.role === 'student') {
+      router.push('/')
+      return
+    }
     fetchStudents()
-  }, [])
+  }, [user])
 
   const fetchStudents = async () => {
     try {
@@ -44,7 +50,9 @@ export default function Students({ user }) {
     <div className="page-container">
       <div className="page-header">
         <h1>Students</h1>
-        <Link href="/students/new" className="btn btn-primary">Add Student</Link>
+        {user?.role === 'admin' && (
+          <Link href="/students/new" className="btn btn-primary">Add Student</Link>
+        )}
       </div>
       <table className="data-table">
         <thead>
@@ -69,8 +77,12 @@ export default function Students({ user }) {
               <td><span className={`status status-${student.status?.toLowerCase()}`}>{student.status}</span></td>
               <td>
                 <Link href={`/students/${student._id}`} className="btn btn-sm">View</Link>
-                <Link href={`/students/${student._id}/edit`} className="btn btn-sm">Edit</Link>
-                <button onClick={() => handleDelete(student._id)} className="btn btn-sm btn-danger">Delete</button>
+                {user?.role === 'admin' && (
+                  <>
+                    <Link href={`/students/${student._id}/edit`} className="btn btn-sm">Edit</Link>
+                    <button onClick={() => handleDelete(student._id)} className="btn btn-sm btn-danger">Delete</button>
+                  </>
+                )}
               </td>
             </tr>
           ))}

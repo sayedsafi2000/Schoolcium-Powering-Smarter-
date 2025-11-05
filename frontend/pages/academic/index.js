@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import axios from 'axios'
 
 export default function Academic({ user }) {
@@ -66,25 +67,30 @@ export default function Academic({ user }) {
     <div className="page-container">
       <div className="page-header">
         <h1>Academic Management</h1>
-        <div>
-          <button
-            className={`btn ${activeTab === 'classes' ? 'btn-primary' : 'btn-secondary'}`}
-            onClick={() => setActiveTab('classes')}
-          >
-            Classes
-          </button>
-          <button
-            className={`btn ${activeTab === 'subjects' ? 'btn-primary' : 'btn-secondary'}`}
-            onClick={() => setActiveTab('subjects')}
-          >
-            Subjects
-          </button>
-          <button
-            className={`btn ${activeTab === 'routines' ? 'btn-primary' : 'btn-secondary'}`}
-            onClick={() => setActiveTab('routines')}
-          >
-            Routines
-          </button>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          {activeTab === 'classes' && <Link href="/classes/new" className="btn btn-primary">Add Class</Link>}
+          {activeTab === 'subjects' && <Link href="/academic/subjects/new" className="btn btn-primary">Add Subject</Link>}
+          {activeTab === 'routines' && <Link href="/academic/routines/new" className="btn btn-primary">Add Routine</Link>}
+          <div>
+            <button
+              className={`btn ${activeTab === 'classes' ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => setActiveTab('classes')}
+            >
+              Classes
+            </button>
+            <button
+              className={`btn ${activeTab === 'subjects' ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => setActiveTab('subjects')}
+            >
+              Subjects
+            </button>
+            <button
+              className={`btn ${activeTab === 'routines' ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => setActiveTab('routines')}
+            >
+              Routines
+            </button>
+          </div>
         </div>
       </div>
       {activeTab === 'classes' && (

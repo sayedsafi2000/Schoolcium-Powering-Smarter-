@@ -1,14 +1,24 @@
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/router'
 import axios from 'axios'
 
 export default function Attendance({ user }) {
+  const router = useRouter()
   const [attendance, setAttendance] = useState([])
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (user?.role === 'student') {
+      router.push('/')
+      return
+    }
+    if (user?.role !== 'admin' && user?.role !== 'teacher') {
+      router.push('/')
+      return
+    }
     fetchAttendance()
-  }, [date])
+  }, [user, date])
 
   const fetchAttendance = async () => {
     try {

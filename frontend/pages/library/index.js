@@ -1,20 +1,26 @@
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/router'
 import Link from 'next/link'
 import axios from 'axios'
 
 export default function Library({ user }) {
+  const router = useRouter()
   const [books, setBooks] = useState([])
   const [issues, setIssues] = useState([])
   const [activeTab, setActiveTab] = useState('books')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (user?.role === 'student') {
+      router.push('/student/books')
+      return
+    }
     if (activeTab === 'books') {
       fetchBooks()
     } else {
       fetchIssues()
     }
-  }, [activeTab])
+  }, [user, activeTab])
 
   const fetchBooks = async () => {
     try {
@@ -51,20 +57,23 @@ export default function Library({ user }) {
       <div className="page-header">
         <h1>Library Management</h1>
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <Link href="/library/new" className="btn btn-primary">Add Book</Link>
+          {user?.role === 'admin' && (
+            <Link href="/library/new" className="btn btn-primary">Add Book</Link>
+          )}
           <div>
-          <button
-            className={`btn ${activeTab === 'books' ? 'btn-primary' : 'btn-secondary'}`}
-            onClick={() => setActiveTab('books')}
-          >
-            Books
-          </button>
-          <button
-            className={`btn ${activeTab === 'issues' ? 'btn-primary' : 'btn-secondary'}`}
-            onClick={() => setActiveTab('issues')}
-          >
-            Issues
-          </button>
+            <button
+              className={`btn ${activeTab === 'books' ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => setActiveTab('books')}
+            >
+              Books
+            </button>
+            <button
+              className={`btn ${activeTab === 'issues' ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => setActiveTab('issues')}
+            >
+              Issues
+            </button>
+          </div>
         </div>
       </div>
       {activeTab === 'books' ? (

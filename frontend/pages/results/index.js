@@ -1,13 +1,19 @@
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/router'
 import axios from 'axios'
 
 export default function Results({ user }) {
+  const router = useRouter()
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (user?.role === 'student') {
+      router.push('/student/results')
+      return
+    }
     fetchResults()
-  }, [])
+  }, [user])
 
   const fetchResults = async () => {
     try {
