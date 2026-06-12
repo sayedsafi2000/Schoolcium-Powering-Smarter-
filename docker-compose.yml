@@ -38,7 +38,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:5000/api}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://schoolciumserver.pixelsbee.com/api}
     restart: unless-stopped
     expose:
       - '3000'
@@ -51,7 +51,7 @@ services:
       context: ./website
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: ${WEBSITE_API_URL:-http://localhost:5000/api}
+        NEXT_PUBLIC_API_URL: ${WEBSITE_API_URL:-https://schoolciumserver.pixelsbee.com/api}
         NEXT_PUBLIC_SCHOOL_NAME: ${SCHOOL_NAME:-Ideal Vision Academy}
         NEXT_PUBLIC_SCHOOL_PHONE: ${SCHOOL_PHONE:-01773-763422}
         NEXT_PUBLIC_SCHOOL_EMAIL: ${SCHOOL_EMAIL:-idealvisionacademy@gmail.com}

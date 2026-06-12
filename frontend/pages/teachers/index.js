@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import axios from 'axios'
-import { Plus } from 'lucide-react'
+import { Plus, Pencil } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { DataTable } from '@/components/custom/data-table'
@@ -80,6 +80,15 @@ export default function Teachers({ user }) {
       accessorKey: 'status',
       header: 'Status',
       cell: ({ row }) => <StatusBadge status={row.getValue('status')} />,
+    },
+    {
+      id: 'actions',
+      header: '',
+      cell: ({ row }) => user?.role === 'admin' ? (
+        <Link href={`/teachers/${row.original._id}/edit`}>
+          <Button variant="ghost" size="sm"><Pencil className="h-4 w-4" /></Button>
+        </Link>
+      ) : null,
     },
   ], [])
 

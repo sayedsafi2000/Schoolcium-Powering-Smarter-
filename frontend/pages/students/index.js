@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import axios from 'axios'
-import { Plus, Upload } from 'lucide-react'
+import { Plus, Upload, Pencil } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { DataTable } from '@/components/custom/data-table'
@@ -86,6 +86,15 @@ export default function Students({ user }) {
       accessorKey: 'status',
       header: 'Status',
       cell: ({ row }) => <StatusBadge status={row.getValue('status')} />,
+    },
+    {
+      id: 'actions',
+      header: '',
+      cell: ({ row }) => user?.role === 'admin' ? (
+        <Link href={`/students/${row.original._id}/edit`}>
+          <Button variant="ghost" size="sm"><Pencil className="h-4 w-4" /></Button>
+        </Link>
+      ) : null,
     },
   ], [])
 

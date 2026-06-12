@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import axios from 'axios'
-import { Plus } from 'lucide-react'
+import { Plus, Pencil } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { DataTable } from '@/components/custom/data-table'
@@ -74,6 +74,15 @@ export default function Exams({ user }) {
       accessorKey: 'status',
       header: 'Status',
       cell: ({ row }) => <ExamStatusBadge status={row.getValue('status')} />,
+    },
+    {
+      id: 'actions',
+      header: '',
+      cell: ({ row }) => canCreate ? (
+        <Link href={`/exams/${row.original._id}/edit`}>
+          <Button variant="ghost" size="sm"><Pencil className="h-4 w-4" /></Button>
+        </Link>
+      ) : null,
     },
   ], [])
 

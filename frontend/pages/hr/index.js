@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import axios from 'axios'
-import { Plus } from 'lucide-react'
+import { Plus, Pencil } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { DataTable } from '@/components/custom/data-table'
@@ -41,6 +41,11 @@ export default function HR() {
     { id: 'department', header: 'Department', cell: ({ row }) => row.original.professionalInfo?.department || '—' },
     { id: 'designation', header: 'Designation', cell: ({ row }) => row.original.professionalInfo?.designation || '—' },
     { accessorKey: 'status', header: 'Status', cell: ({ row }) => <Badge variant="outline">{row.getValue('status')}</Badge> },
+    { id: 'actions', header: '', cell: ({ row }) => (
+      <Link href={`/hr/${row.original._id}/edit`}>
+        <Button variant="ghost" size="sm"><Pencil className="h-4 w-4" /></Button>
+      </Link>
+    )},
   ], [])
 
   if (loading) {

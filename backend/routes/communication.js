@@ -30,8 +30,24 @@ router.post('/announcements', auth, async (req, res) => {
   }
 });
 
-// Messages
-router.get('/messages', auth, async (req, res) => {
+router.put('/announcements/:id', auth, async (req, res) => {
+  try {
+    const announcement = await Announcement.findByIdAndUpdate(req.params.id, req.body, { new: true })
+    if (!announcement) return res.status(404).json({ message: 'Announcement not found' })
+    res.json(announcement)
+  } catch (error) {
+    res.status(400).json({ message: error.message })
+  }
+})
+
+router.delete('/announcements/:id', auth, async (req, res) => {
+  try {
+    await Announcement.findByIdAndDelete(req.params.id)
+    res.json({ message: 'Announcement deleted' })
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+})
   try {
     const { type } = req.query;
     const query = type === 'sent' 

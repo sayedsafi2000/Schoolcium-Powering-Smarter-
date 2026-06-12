@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import axios from 'axios'
-import { Plus, Trash2, Users as UsersIcon } from 'lucide-react'
+import { Plus, Trash2, Users as UsersIcon, Pencil } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { DataTable } from '@/components/custom/data-table'
 import { GlassCard } from '@/components/custom/glass-card'
@@ -61,9 +61,14 @@ export default function Classes({ user }) {
       return <span className="inline-flex items-center gap-1.5"><UsersIcon className="h-3.5 w-3.5 text-muted-foreground" />{cls.currentStrength || 0}/{cls.capacity || 0}</span>
     }},
     { id: 'actions', header: '', cell: ({ row }) => user?.role === 'admin' ? (
-      <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleDelete(row.original._id)}>
-        <Trash2 className="h-4 w-4" />
-      </Button>
+      <div className="flex items-center gap-1">
+        <Link href={`/classes/${row.original._id}/edit`}>
+          <Button variant="ghost" size="sm"><Pencil className="h-4 w-4" /></Button>
+        </Link>
+        <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleDelete(row.original._id)}>
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
     ) : null },
   ], [user])
 

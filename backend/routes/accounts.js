@@ -24,8 +24,43 @@ router.post('/accounts', auth, async (req, res) => {
   }
 });
 
-// Transactions
-router.get('/transactions', auth, async (req, res) => {
+router.put('/accounts/:id', auth, async (req, res) => {
+  try {
+    const account = await Account.findByIdAndUpdate(req.params.id, req.body, { new: true })
+    if (!account) return res.status(404).json({ message: 'Account not found' })
+    res.json(account)
+  } catch (error) {
+    res.status(400).json({ message: error.message })
+  }
+})
+
+router.delete('/accounts/:id', auth, async (req, res) => {
+  try {
+    await Account.findByIdAndDelete(req.params.id)
+    res.json({ message: 'Account deleted' })
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+})
+
+router.put('/transactions/:id', auth, async (req, res) => {
+  try {
+    const transaction = await Transaction.findByIdAndUpdate(req.params.id, req.body, { new: true })
+    if (!transaction) return res.status(404).json({ message: 'Transaction not found' })
+    res.json(transaction)
+  } catch (error) {
+    res.status(400).json({ message: error.message })
+  }
+})
+
+router.delete('/transactions/:id', auth, async (req, res) => {
+  try {
+    await Transaction.findByIdAndDelete(req.params.id)
+    res.json({ message: 'Transaction deleted' })
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+})
   try {
     const { accountId, type, startDate, endDate } = req.query;
     const query = {};

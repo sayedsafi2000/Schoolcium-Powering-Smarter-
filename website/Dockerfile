@@ -2,8 +2,7 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Build-time env vars injected from docker-compose args
-ARG NEXT_PUBLIC_API_URL=http://localhost:5000/api
+ARG NEXT_PUBLIC_API_URL=https://schoolciumserver.pixelsbee.com/api
 ARG NEXT_PUBLIC_SCHOOL_NAME=Ideal Vision Academy
 ARG NEXT_PUBLIC_SCHOOL_PHONE=01773-763422
 ARG NEXT_PUBLIC_SCHOOL_EMAIL=idealvisionacademy@gmail.com
@@ -17,8 +16,6 @@ ENV NEXT_PUBLIC_SCHOOL_ADDRESS=$NEXT_PUBLIC_SCHOOL_ADDRESS
 ENV NEXT_TELEMETRY_DISABLED=1
 
 COPY package.json package-lock.json* ./
-
-# Use npm install instead of npm ci — more tolerant of lockfile differences
 RUN npm install --legacy-peer-deps
 
 COPY . .

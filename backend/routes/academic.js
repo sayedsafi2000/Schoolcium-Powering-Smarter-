@@ -21,13 +21,56 @@ router.get('/classes', auth, async (req, res) => {
 
 router.post('/classes', auth, async (req, res) => {
   try {
-    const classData = new Class(req.body);
-    await classData.save();
-    res.status(201).json(classData);
+    const body = { ...req.body }
+    if (!body.classTeacher || body.classTeacher === '') delete body.classTeacher
+    if (Array.isArray(body.subjects)) {
+      body.subjects = body.subjects.filter(s => s.subject && s.subject !== '')
+      body.subjects = body.subjects.map(s => { if (!s.teacher || s.teacher === '') delete s.teacher; return s })
+    }
+    const classData = new Class(body)
+    await classData.save()
+    res.status(201).json(classData)
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(400).json({ message: error.message })
   }
-});
+})
+
+router.put('/classes/:id', auth, async (req, res) => {
+  try {
+    const body = { ...req.body }
+    if (!body.classTeacher || body.classTeacher === '') delete body.classTeacher
+    if (Array.isArray(body.subjects)) {
+      body.subjects = body.subjects.filter(s => s.subject && s.subject !== '')
+      body.subjects = body.subjects.map(s => { if (!s.teacher || s.teacher === '') delete s.teacher; return s })
+    }
+    const classData = await Class.findByIdAndUpdate(req.params.id, body, { new: true, runValidators: false })
+      .populate('classTeacher')
+    if (!classData) return res.status(404).json({ message: 'Class not found' })
+    res.json(classData)
+  } catch (error) {
+    res.status(400).json({ message: error.message })
+  }
+})
+
+router.put('/subjects/:id', auth, async (req, res) => {
+  try {
+    const subject = await Subject.findByIdAndUpdate(req.params.id, req.body, { new: true })
+    if (!subject) return res.status(404).json({ message: 'Subject not found' })
+    res.json(subject)
+  } catch (error) {
+    res.status(400).json({ message: error.message })
+  }
+})
+
+router.delete('/subjects/:id', auth, async (req, res) => {
+  try {
+    const subject = await Subject.findByIdAndDelete(req.params.id)
+    if (!subject) return res.status(404).json({ message: 'Subject not found' })
+    res.json({ message: 'Subject deleted' })
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+})
 
 router.delete('/classes/:id', auth, async (req, res) => {
   try {
