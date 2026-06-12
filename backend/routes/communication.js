@@ -4,7 +4,8 @@ const { auth } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Announcements
+// ── Announcements ─────────────────────────────────────────────────────────────
+
 router.get('/announcements', auth, async (req, res) => {
   try {
     const announcements = await Announcement.find({ isActive: true })
@@ -19,10 +20,7 @@ router.get('/announcements', auth, async (req, res) => {
 
 router.post('/announcements', auth, async (req, res) => {
   try {
-    const announcement = new Announcement({
-      ...req.body,
-      createdBy: req.user.userId
-    });
+    const announcement = new Announcement({ ...req.body, createdBy: req.user.userId });
     await announcement.save();
     res.status(201).json(announcement);
   } catch (error) {
@@ -32,28 +30,31 @@ router.post('/announcements', auth, async (req, res) => {
 
 router.put('/announcements/:id', auth, async (req, res) => {
   try {
-    const announcement = await Announcement.findByIdAndUpdate(req.params.id, req.body, { new: true })
-    if (!announcement) return res.status(404).json({ message: 'Announcement not found' })
-    res.json(announcement)
+    const announcement = await Announcement.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!announcement) return res.status(404).json({ message: 'Announcement not found' });
+    res.json(announcement);
   } catch (error) {
-    res.status(400).json({ message: error.message })
+    res.status(400).json({ message: error.message });
   }
-})
+});
 
 router.delete('/announcements/:id', auth, async (req, res) => {
   try {
-    await Announcement.findByIdAndDelete(req.params.id)
-    res.json({ message: 'Announcement deleted' })
+    await Announcement.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Announcement deleted' });
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
+
+// ── Messages ──────────────────────────────────────────────────────────────────
+
+router.get('/messages', auth, async (req, res) => {
   try {
     const { type } = req.query;
-    const query = type === 'sent' 
+    const query = type === 'sent'
       ? { from: req.user.userId }
       : { to: req.user.userId };
-    
     const messages = await Message.find(query)
       .populate('from', 'username email')
       .populate('to', 'username email')
@@ -66,10 +67,7 @@ router.delete('/announcements/:id', auth, async (req, res) => {
 
 router.post('/messages', auth, async (req, res) => {
   try {
-    const message = new Message({
-      ...req.body,
-      from: req.user.userId
-    });
+    const message = new Message({ ...req.body, from: req.user.userId });
     await message.save();
     res.status(201).json(message);
   } catch (error) {
@@ -92,4 +90,3 @@ router.put('/messages/:id/read', auth, async (req, res) => {
 });
 
 module.exports = router;
-
