@@ -12,16 +12,16 @@ module.exports = {
       },
       colors: {
         brand: {
-          50:  '#f0fdf6',
-          100: '#dcfce9',
-          200: '#bbf7d2',
-          300: '#86efac',
-          400: '#4ade80',
-          500: '#22c55e',
-          600: '#16a34a',   // primary green
-          700: '#15803d',
-          800: '#166534',
-          900: '#14532d',
+          50:  '#f0fdfa',
+          100: '#ccfbf1',
+          200: '#99f6e4',
+          300: '#5eead4',
+          400: '#2dd4bf',
+          500: '#14b8a6',  // teal-500
+          600: '#0d9488',  // teal-600 — primary
+          700: '#0f766e',  // teal-700
+          800: '#115e59',  // teal-800
+          900: '#134e4a',  // teal-900
         },
       },
       borderRadius: {
@@ -31,7 +31,7 @@ module.exports = {
       boxShadow: {
         'clay':    '0 4px 24px -4px rgba(0,0,0,0.08), 0 2px 8px -2px rgba(0,0,0,0.04)',
         'clay-lg': '0 8px 40px -8px rgba(0,0,0,0.14), 0 4px 16px -4px rgba(0,0,0,0.06)',
-        'glow-green': '0 0 30px rgba(22,163,74,0.25)',
+        'glow-teal': '0 0 40px rgba(13,148,136,0.3)',
       },
     },
   },

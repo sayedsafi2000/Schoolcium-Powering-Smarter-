@@ -2,9 +2,8 @@ import Head from 'next/head'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import {
-  ArrowRight, BookOpen, Users, Award, GraduationCap, Phone, MapPin,
-  Download, ChevronRight, Star, Shield, Lightbulb, Heart,
-  Building, Library, CheckCircle, Bell
+  ArrowRight, CheckCircle, ChevronRight, Phone, MapPin,
+  Download, Bell, BookOpen, Users, GraduationCap, Award
 } from 'lucide-react'
 import SectionHeader from '@/components/SectionHeader'
 import NoticeCard from '@/components/NoticeCard'
@@ -12,25 +11,36 @@ import TeacherCard from '@/components/TeacherCard'
 import CTASection from '@/components/CTASection'
 import { getPublicNotices } from '@/lib/api'
 
+// ── Working image URLs (no external dependency) ───────────────────────────────
+const IMG = {
+  hero:       'https://images.pexels.com/photos/8613089/pexels-photo-8613089.jpeg?auto=compress&cs=tinysrgb&w=1200',
+  classroom:  'https://images.pexels.com/photos/5212345/pexels-photo-5212345.jpeg?auto=compress&cs=tinysrgb&w=600',
+  students:   'https://images.pexels.com/photos/8471939/pexels-photo-8471939.jpeg?auto=compress&cs=tinysrgb&w=600',
+  reading:    'https://images.pexels.com/photos/159621/books-bookstore-book-reading-159621.jpeg?auto=compress&cs=tinysrgb&w=600',
+  school:     'https://images.pexels.com/photos/256455/pexels-photo-256455.jpeg?auto=compress&cs=tinysrgb&w=800',
+  teacher:    'https://images.pexels.com/photos/5905709/pexels-photo-5905709.jpeg?auto=compress&cs=tinysrgb&w=600',
+  campus:     'https://images.pexels.com/photos/1595391/pexels-photo-1595391.jpeg?auto=compress&cs=tinysrgb&w=800',
+}
+
 const MOCK_TEACHERS = [
-  { _id: '1', name: 'Md. Abdul Karim',      designation: 'Principal',   subject: 'Islamic Studies' },
-  { _id: '2', name: 'Mrs. Fatema Begum',    designation: 'Sr. Teacher', subject: 'Bengali & English' },
-  { _id: '3', name: 'Md. Rafiqul Islam',    designation: 'Teacher',     subject: 'Mathematics' },
-  { _id: '4', name: 'Mrs. Nasrin Akter',    designation: 'Teacher',     subject: 'Science' },
+  { _id: '1', name: 'Md. Abdul Karim',   designation: 'Principal',   subject: 'Islamic Studies'  },
+  { _id: '2', name: 'Mrs. Fatema Begum', designation: 'Sr. Teacher', subject: 'Bengali & English' },
+  { _id: '3', name: 'Md. Rafiqul Islam', designation: 'Teacher',     subject: 'Mathematics'       },
+  { _id: '4', name: 'Mrs. Nasrin Akter', designation: 'Teacher',     subject: 'Science'           },
 ]
 
 const PROGRAMS = [
-  { label: 'Pre-Primary', classes: 'KG I & II',  color: 'bg-pink-50   border-pink-100',  dot: 'bg-pink-400',   icon: '🌱' },
-  { label: 'Primary',     classes: 'Class 1–5',  color: 'bg-blue-50   border-blue-100',  dot: 'bg-blue-500',   icon: '📚' },
-  { label: 'Junior',      classes: 'Class 6–8',  color: 'bg-purple-50 border-purple-100',dot: 'bg-purple-500', icon: '✏️' },
-  { label: 'Secondary',   classes: 'Class 9–10', color: 'bg-amber-50  border-amber-100', dot: 'bg-amber-500',  icon: '🎓' },
+  { label: 'Pre-Primary', classes: 'KG I & II',  bg: 'bg-rose-50  border-rose-100',  dot: 'bg-rose-400',  icon: '🌱' },
+  { label: 'Primary',     classes: 'Class 1–5',  bg: 'bg-sky-50   border-sky-100',   dot: 'bg-sky-500',   icon: '📚' },
+  { label: 'Junior',      classes: 'Class 6–8',  bg: 'bg-violet-50 border-violet-100',dot: 'bg-violet-500',icon: '✏️' },
+  { label: 'Secondary',   classes: 'Class 9–10', bg: 'bg-amber-50 border-amber-100', dot: 'bg-amber-500', icon: '🎓' },
 ]
 
 const FACILITIES = [
   { emoji: '🏫', label: 'Modern Classrooms' },
-  { emoji: '📖', label: 'School Library' },
-  { emoji: '💻', label: 'Computer / ICT Lab' },
-  { emoji: '⚽', label: 'Sports Ground' },
+  { emoji: '📖', label: 'School Library'    },
+  { emoji: '💻', label: 'Computer Lab'      },
+  { emoji: '⚽', label: 'Sports Ground'     },
   { emoji: '🎭', label: 'Cultural Programs' },
   { emoji: '🛡️', label: 'Safe Environment' },
 ]
@@ -45,8 +55,8 @@ const WHY_US = [
 ]
 
 export default function HomePage() {
-  const [notices, setNotices]         = useState([])
-  const [loadingNotices, setLoading]  = useState(true)
+  const [notices, setNotices]        = useState([])
+  const [loadingNotices, setLoading] = useState(true)
 
   useEffect(() => {
     getPublicNotices({ limit: 3 })
@@ -59,37 +69,47 @@ export default function HomePage() {
     <>
       <Head>
         <title>Ideal Vision Academy — Building Bright Futures | Badaghat, Sunamganj</title>
-        <meta name="description" content="Ideal Vision Academy, Badaghat — a premier school in Sunamganj, Bangladesh committed to quality education, discipline and moral values." />
+        <meta name="description" content="Ideal Vision Academy, Badaghat — a premier school in Sunamganj, Bangladesh." />
       </Head>
 
-      {/* ─── HERO ──────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-brand-800 via-brand-700 to-blue-800 min-h-[88vh] flex items-center">
-        {/* Decorative blobs */}
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full bg-white/[0.04] -translate-y-1/2 translate-x-1/4 blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full bg-white/[0.04] translate-y-1/2 -translate-x-1/4 blur-3xl pointer-events-none" />
-        {/* Grid pattern overlay */}
-        <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
-          style={{ backgroundImage: 'linear-gradient(white 1px,transparent 1px),linear-gradient(90deg,white 1px,transparent 1px)', backgroundSize: '60px 60px' }} />
+      {/* ══════════════════════════════════════════════════════════════════════
+          HERO
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-brand-900 via-brand-800 to-slate-900 min-h-[90vh] flex items-center">
+        {/* Background image with overlay */}
+        <div className="absolute inset-0">
+          <img src={IMG.hero} alt="Students in school"
+            className="w-full h-full object-cover opacity-20" />
+          <div className="absolute inset-0 bg-gradient-to-r from-brand-900/90 via-brand-800/70 to-transparent" />
+        </div>
 
-        <div className="container-school relative py-24 md:py-32">
+        {/* Decorative circles */}
+        <div className="absolute top-20 right-20 h-72 w-72 rounded-full bg-brand-400/10 blur-3xl pointer-events-none" />
+        <div className="absolute bottom-10 right-1/3 h-48 w-48 rounded-full bg-teal-300/10 blur-2xl pointer-events-none" />
+
+        <div className="container-school relative py-24 md:py-32 z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            {/* Left */}
+
+            {/* ── Left content ── */}
             <div>
-              <div className="inline-flex items-center gap-2 bg-white/10 text-emerald-100 text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-full mb-8 border border-white/10">
-                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+              <div className="inline-flex items-center gap-2 bg-brand-500/20 backdrop-blur-sm text-teal-200
+                              text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-full mb-8
+                              border border-brand-400/30">
+                <span className="h-2 w-2 rounded-full bg-teal-400 animate-pulse" />
                 Admissions Open · 2025–2026
               </div>
 
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-[1.12] tracking-tight mb-6"
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-[1.1]
+                             tracking-tight mb-6"
                   style={{ fontFamily: "'Playfair Display', serif" }}>
                 Building Bright Futures Through{' '}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-cyan-300">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-300 to-cyan-400">
                   Quality Education
                 </span>
               </h1>
 
-              <p className="text-lg text-emerald-100 leading-relaxed max-w-lg mb-10">
-                Ideal Vision Academy is committed to nurturing knowledge, discipline, creativity and moral values for students in Sunamganj.
+              <p className="text-lg text-slate-300 leading-relaxed max-w-lg mb-10">
+                Ideal Vision Academy is committed to nurturing knowledge, discipline, creativity and moral values for students in Sunamganj, Bangladesh.
               </p>
 
               <div className="flex flex-wrap gap-3">
@@ -101,60 +121,56 @@ export default function HomePage() {
                 </Link>
               </div>
 
-              <div className="mt-10 flex flex-wrap items-center gap-6">
+              {/* Stats row */}
+              <div className="mt-12 grid grid-cols-4 gap-4">
                 {[
                   { val: '800+', lbl: 'Students' },
-                  { val: '30+',  lbl: 'Teachers' },
-                  { val: '15+',  lbl: 'Years' },
+                  { val: '30+',  lbl: 'Teachers'  },
+                  { val: '15+',  lbl: 'Years'     },
                   { val: '98%',  lbl: 'Pass Rate' },
                 ].map(({ val, lbl }) => (
-                  <div key={lbl} className="text-center">
+                  <div key={lbl} className="bg-white/10 backdrop-blur-sm border border-white/10
+                                            rounded-2xl p-3 text-center">
                     <p className="text-2xl font-extrabold text-white">{val}</p>
-                    <p className="text-xs text-emerald-300 font-semibold mt-0.5">{lbl}</p>
+                    <p className="text-xs text-teal-300 font-semibold mt-0.5">{lbl}</p>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Right — Real school images grid */}
-            <div className="hidden lg:grid grid-cols-2 gap-3">
-              {/* Main big image */}
-              <div className="col-span-2 rounded-3xl overflow-hidden h-52 shadow-xl">
-                <img
-                  src="https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800&q=80"
-                  alt="Students in classroom"
-                  className="w-full h-full object-cover"
-                />
+            {/* ── Right: Image collage ── */}
+            <div className="hidden lg:flex flex-col gap-3">
+              {/* Main image */}
+              <div className="rounded-3xl overflow-hidden h-64 shadow-2xl ring-2 ring-white/10">
+                <img src={IMG.classroom} alt="Students learning in classroom"
+                  className="w-full h-full object-cover" />
               </div>
-              {/* Two smaller images */}
-              <div className="rounded-2xl overflow-hidden h-36 shadow-lg">
-                <img
-                  src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=400&q=80"
-                  alt="School books and education"
-                  className="w-full h-full object-cover"
-                />
+              {/* Two side images */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-2xl overflow-hidden h-40 shadow-xl ring-1 ring-white/10">
+                  <img src={IMG.students} alt="Happy students"
+                    className="w-full h-full object-cover" />
+                </div>
+                <div className="rounded-2xl overflow-hidden h-40 shadow-xl ring-1 ring-white/10">
+                  <img src={IMG.reading} alt="Books and education"
+                    className="w-full h-full object-cover" />
+                </div>
               </div>
-              <div className="rounded-2xl overflow-hidden h-36 shadow-lg">
-                <img
-                  src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400&q=80"
-                  alt="Students studying"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              {/* Info badge overlay */}
-              <div className="col-span-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4 flex items-center justify-between">
+              {/* Badge strip */}
+              <div className="bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl
+                              p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-emerald-400 flex items-center justify-center">
-                    <span className="text-white font-extrabold text-sm">✓</span>
+                  <div className="h-10 w-10 rounded-xl bg-brand-500 flex items-center justify-center">
+                    <GraduationCap className="h-5 w-5 text-white" />
                   </div>
                   <div>
                     <p className="text-white font-bold text-sm">Ideal Vision Academy</p>
-                    <p className="text-emerald-200 text-xs">Badaghat, Sunamganj, Bangladesh</p>
+                    <p className="text-teal-300 text-xs">Badaghat, Sunamganj</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-white font-extrabold text-lg">98%</p>
-                  <p className="text-emerald-300 text-xs">Pass Rate</p>
+                <div className="bg-teal-500/20 border border-teal-400/30 rounded-xl px-3 py-1.5 text-center">
+                  <p className="text-white font-extrabold text-lg leading-none">A+</p>
+                  <p className="text-teal-300 text-xs">Rated School</p>
                 </div>
               </div>
             </div>
@@ -162,54 +178,55 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── ADMISSION BANNER ──────────────────────────────────────────────── */}
-      <section className="bg-amber-500">
-        <div className="container-school py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+      {/* ── Admission ticker ── */}
+      <section className="bg-amber-500 py-3.5">
+        <div className="container-school flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-amber-900 font-bold text-sm flex items-center gap-2">
-            <span className="text-lg">📢</span>
-            Admissions are open for 2025–2026. Limited seats available — apply early!
+            <span className="text-base">📢</span>
+            Admissions are open for 2025–2026. Limited seats — apply early!
           </p>
-          <Link href="/admission" className="bg-amber-900 text-white text-xs font-bold px-5 py-2 rounded-2xl hover:bg-amber-950 transition-colors shrink-0">
+          <Link href="/admission"
+            className="bg-amber-900 text-white text-xs font-bold px-5 py-2 rounded-2xl
+                       hover:bg-amber-950 transition-colors shrink-0 whitespace-nowrap">
             Apply Now →
           </Link>
         </div>
       </section>
 
-      {/* ─── ABOUT PREVIEW ─────────────────────────────────────────────────── */}
+      {/* ══════════════════════════════════════════════════════════════════════
+          ABOUT PREVIEW
+      ══════════════════════════════════════════════════════════════════════ */}
       <section className="py-20 bg-white">
         <div className="container-school">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            {/* Left: Real image + Stat boxes */}
-            <div className="relative">
-              {/* Main school image */}
-              <div className="rounded-3xl overflow-hidden h-72 shadow-xl mb-4">
-                <img
-                  src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&q=80"
-                  alt="School building and students"
-                  className="w-full h-full object-cover"
-                />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 items-center">
+
+            {/* Image side */}
+            <div className="space-y-3">
+              <div className="rounded-3xl overflow-hidden h-72 shadow-xl">
+                <img src={IMG.school} alt="School campus"
+                  className="w-full h-full object-cover" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gradient-to-br from-brand-600 to-brand-800 rounded-3xl p-6 text-white shadow-glow-green">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-gradient-to-br from-brand-600 to-brand-800 rounded-3xl p-6 text-white shadow-glow-teal">
                   <p className="text-4xl font-extrabold">800+</p>
-                  <p className="text-emerald-200 text-sm mt-1 font-medium">Happy Students</p>
+                  <p className="text-teal-200 text-sm mt-1 font-medium">Students</p>
                 </div>
-                <div className="bg-gradient-to-br from-blue-700 to-blue-900 rounded-3xl p-6 text-white">
+                <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-6 text-white">
                   <p className="text-4xl font-extrabold">30+</p>
-                  <p className="text-blue-200 text-sm mt-1 font-medium">Qualified Teachers</p>
+                  <p className="text-slate-300 text-sm mt-1 font-medium">Teachers</p>
                 </div>
                 <div className="bg-amber-400 rounded-3xl p-6 text-amber-900">
                   <p className="text-4xl font-extrabold">15+</p>
-                  <p className="text-amber-800 text-sm mt-1 font-medium">Years of Service</p>
+                  <p className="text-amber-800 text-sm mt-1 font-medium">Years</p>
                 </div>
-                <div className="bg-slate-900 rounded-3xl p-6 text-white">
+                <div className="bg-gradient-to-br from-brand-500 to-brand-700 rounded-3xl p-6 text-white">
                   <p className="text-4xl font-extrabold">98%</p>
-                  <p className="text-slate-400 text-sm mt-1 font-medium">Pass Rate</p>
+                  <p className="text-teal-100 text-sm mt-1 font-medium">Pass Rate</p>
                 </div>
               </div>
             </div>
 
-            {/* Right */}
+            {/* Text side */}
             <div>
               <SectionHeader
                 label="About Us"
@@ -234,7 +251,9 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── ACADEMIC PROGRAMS ─────────────────────────────────────────────── */}
+      {/* ══════════════════════════════════════════════════════════════════════
+          ACADEMIC PROGRAMS
+      ══════════════════════════════════════════════════════════════════════ */}
       <section className="py-20 bg-slate-50">
         <div className="container-school">
           <SectionHeader
@@ -243,8 +262,8 @@ export default function HomePage() {
             subtitle="From kindergarten to SSC — a structured path for every stage of learning."
           />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {PROGRAMS.map(({ label, classes, color, dot, icon }) => (
-              <div key={label} className={`clay-card rounded-3xl p-7 border-2 ${color}`}>
+            {PROGRAMS.map(({ label, classes, bg, dot, icon }) => (
+              <div key={label} className={`clay-card border-2 ${bg} p-7`}>
                 <div className="text-4xl mb-4">{icon}</div>
                 <div className="flex items-center gap-2 mb-1">
                   <span className={`h-2 w-2 rounded-full ${dot}`} />
@@ -260,8 +279,32 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── NOTICE BOARD ──────────────────────────────────────────────────── */}
-      <section className="py-20 bg-white">
+      {/* ══════════════════════════════════════════════════════════════════════
+          CAMPUS PHOTOS STRIP
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section className="py-16 bg-white">
+        <div className="container-school">
+          <SectionHeader label="Campus Life" title="Life at Ideal Vision Academy" />
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {[
+              { src: IMG.classroom, alt: 'Classroom learning'  },
+              { src: IMG.students,  alt: 'Students together'   },
+              { src: IMG.teacher,   alt: 'Teacher with class'  },
+              { src: IMG.campus,    alt: 'School campus'       },
+            ].map(({ src, alt }) => (
+              <div key={alt} className="rounded-2xl overflow-hidden aspect-[4/3] shadow-md hover:shadow-xl transition-all group">
+                <img src={src} alt={alt}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          NOTICE BOARD
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section className="py-20 bg-slate-50">
         <div className="container-school">
           <div className="flex items-end justify-between mb-12 flex-wrap gap-4">
             <SectionHeader
@@ -270,14 +313,15 @@ export default function HomePage() {
               subtitle="Stay updated with school announcements."
               center={false}
             />
-            <Link href="/notices" className="flex items-center gap-1.5 text-sm font-bold text-brand-600 hover:underline shrink-0">
+            <Link href="/notices"
+              className="flex items-center gap-1.5 text-sm font-bold text-brand-600 hover:underline shrink-0">
               All Notices <ChevronRight className="h-4 w-4" />
             </Link>
           </div>
 
           {loadingNotices ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[1,2,3].map(i => <div key={i} className="bg-slate-100 rounded-3xl h-60 animate-pulse" />)}
+              {[1,2,3].map(i => <div key={i} className="bg-white rounded-3xl h-60 animate-pulse" />)}
             </div>
           ) : notices.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -292,8 +336,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── TEACHERS PREVIEW ──────────────────────────────────────────────── */}
-      <section className="py-20 bg-slate-50">
+      {/* ══════════════════════════════════════════════════════════════════════
+          TEACHERS
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section className="py-20 bg-white">
         <div className="container-school">
           <div className="flex items-end justify-between mb-12 flex-wrap gap-4">
             <SectionHeader
@@ -302,7 +348,8 @@ export default function HomePage() {
               subtitle="Dedicated educators committed to student success."
               center={false}
             />
-            <Link href="/teachers" className="flex items-center gap-1.5 text-sm font-bold text-brand-600 hover:underline shrink-0">
+            <Link href="/teachers"
+              className="flex items-center gap-1.5 text-sm font-bold text-brand-600 hover:underline shrink-0">
               View All <ChevronRight className="h-4 w-4" />
             </Link>
           </div>
@@ -312,30 +359,38 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── FACILITIES ────────────────────────────────────────────────────── */}
-      <section className="py-20 bg-gradient-to-br from-brand-700 via-brand-600 to-blue-700 relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0"
-          style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(255,255,255,0.05) 0%, transparent 60%)' }} />
+      {/* ══════════════════════════════════════════════════════════════════════
+          FACILITIES
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section className="py-20 bg-gradient-to-br from-brand-800 via-brand-700 to-brand-900 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10 pointer-events-none"
+          style={{ backgroundImage: 'radial-gradient(circle at 30% 50%, white 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
         <div className="container-school relative">
-          <SectionHeader label="Campus" title="Our Facilities" subtitle="Everything your child needs to learn, grow and thrive." light />
+          <SectionHeader label="Campus" title="Our Facilities"
+            subtitle="Everything your child needs to learn, grow and thrive." light />
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
             {FACILITIES.map(({ emoji, label }) => (
-              <div key={label} className="bg-white/10 hover:bg-white/20 border border-white/10 rounded-3xl p-5 text-center transition-all cursor-default">
+              <div key={label}
+                className="bg-white/10 hover:bg-white/20 border border-white/10 rounded-3xl
+                           p-5 text-center transition-all cursor-default backdrop-blur-sm">
                 <span className="text-3xl block mb-3">{emoji}</span>
                 <p className="text-sm font-semibold text-white leading-tight">{label}</p>
               </div>
             ))}
           </div>
-          <div className="mt-8 text-center">
+          <div className="mt-10 text-center">
             <Link href="/facilities" className="btn-outline-white">See All Facilities</Link>
           </div>
         </div>
       </section>
 
-      {/* ─── DOWNLOADS ─────────────────────────────────────────────────────── */}
+      {/* ══════════════════════════════════════════════════════════════════════
+          DOWNLOADS
+      ══════════════════════════════════════════════════════════════════════ */}
       <section className="py-20 bg-white">
         <div className="container-school">
-          <SectionHeader label="Downloads" title="Important Documents" subtitle="Get admission forms, class routines, exam schedules and more." />
+          <SectionHeader label="Downloads" title="Important Documents"
+            subtitle="Admission forms, routines, exam schedules and more." />
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 max-w-2xl mx-auto">
             {['Admission Form', 'Class Routine', 'Exam Schedule'].map(name => (
               <Link key={name} href="/downloads"
@@ -356,17 +411,21 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── CONTACT STRIP ─────────────────────────────────────────────────── */}
+      {/* ══════════════════════════════════════════════════════════════════════
+          CONTACT STRIP
+      ══════════════════════════════════════════════════════════════════════ */}
       <section className="py-16 bg-slate-50">
         <div className="container-school">
           <div className="clay-card rounded-4xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-8">
             <div>
-              <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900" style={{ fontFamily: "'Playfair Display', serif" }}>
+              <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900"
+                  style={{ fontFamily: "'Playfair Display', serif" }}>
                 Have questions? Get in touch.
               </h2>
               <p className="text-slate-500 mt-2 text-sm">We're happy to help with admissions, queries or any information.</p>
-              <div className="flex flex-wrap gap-4 mt-5">
-                <a href="tel:01773763422" className="flex items-center gap-2 text-brand-700 font-bold text-sm">
+              <div className="flex flex-wrap gap-5 mt-5">
+                <a href="tel:01773763422"
+                  className="flex items-center gap-2 text-brand-700 font-bold text-sm hover:text-brand-800">
                   <Phone className="h-4 w-4" />01773-763422
                 </a>
                 <span className="flex items-center gap-2 text-slate-400 text-sm">
