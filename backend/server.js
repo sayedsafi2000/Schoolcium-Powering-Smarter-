@@ -13,25 +13,22 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/school-management';
 
-mongoose.connect(MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log('MongoDB Connected Successfully'))
-.catch(err => {
-  console.error('MongoDB Connection Error:', err.message);
-  console.log('\n⚠️  MongoDB is not running. Please:');
-  console.log('1. Make sure MongoDB is installed');
-  console.log('2. Start MongoDB service:');
-  console.log('   - Open Command Prompt as Administrator');
-  console.log('   - Run: net start MongoDB');
-  console.log('   OR if MongoDB is installed as a service:');
-  console.log('   - Go to Services (services.msc)');
-  console.log('   - Find "MongoDB" and start it');
-  console.log('\n3. Or install MongoDB if not installed:');
-  console.log('   Download from: https://www.mongodb.com/try/download/community');
-  console.log('\nServer will continue running but database operations will fail until MongoDB is started.\n');
-});
+// Retry connection — important for Docker where mongo may start after backend
+const connectWithRetry = () => {
+  mongoose.connect(MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    serverSelectionTimeoutMS: 5000,
+  })
+  .then(() => console.log('✅ MongoDB Connected Successfully'))
+  .catch(err => {
+    console.error('⚠️  MongoDB connection failed:', err.message);
+    console.log('Retrying in 5 seconds...');
+    setTimeout(connectWithRetry, 5000);
+  });
+};
+
+connectWithRetry();
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));

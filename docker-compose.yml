@@ -1,30 +1,8 @@
-# ─────────────────────────────────────────────────────────────────────────────
-# Schoolcium · Full Stack Docker Compose
-# Services: mongo | backend (5000) | admin/frontend (3000) | website (3001)
-#
-# Coolify setup:
-#   Build Pack     → Docker Compose
-#   Compose file   → docker-compose.yml   (or docker-compose.coolify.yml)
-#
-#   Domains (Coolify UI) — include internal port in the domain string:
-#     backend  → https://api.yourdomain.com:5000
-#     admin    → https://admin.yourdomain.com:3000
-#     website  → https://yourdomain.com:3001
-#
-#   Environment Variables (set in Coolify UI or .env on server):
-#     MONGODB_URI, JWT_SECRET, CLOUDINARY_CLOUD_NAME,
-#     CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET,
-#     NEXT_PUBLIC_API_URL, WEBSITE_API_URL
-#
-# Local dev:
-#   docker compose -f docker-compose.yml -f docker-compose.local.yml up --build
-# ─────────────────────────────────────────────────────────────────────────────
-
 services:
 
-  # ── MongoDB ──────────────────────────────────────────────────────────────────
+  # ── MongoDB ─────────────────────────────────────────────────────────────────
   mongo:
-    image: mongo:7-jammy
+    image: mongo:6
     restart: unless-stopped
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-schoolcium}
@@ -32,14 +10,8 @@ services:
       MONGO_INITDB_DATABASE: school-management
     volumes:
       - mongo_data:/data/db
-    healthcheck:
-      test: ['CMD', 'mongosh', '--quiet', '--eval', "db.adminCommand('ping').ok"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 20s
 
-  # ── Backend API ───────────────────────────────────────────────────────────────
+  # ── Backend API ──────────────────────────────────────────────────────────────
   backend:
     build:
       context: ./backend
@@ -58,10 +30,9 @@ services:
       CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-X8Lqo_AbMGsrSefDBzQk46aDJ40}
       CORS_ORIGIN: ${CORS_ORIGIN:-*}
     depends_on:
-      mongo:
-        condition: service_healthy
+      - mongo
 
-  # ── Admin Panel (Next.js) ─────────────────────────────────────────────────────
+  # ── Admin Panel (Next.js) ────────────────────────────────────────────────────
   admin:
     build:
       context: ./frontend
@@ -71,12 +42,10 @@ services:
     restart: unless-stopped
     expose:
       - '3000'
-    environment:
-      NODE_ENV: production
     depends_on:
       - backend
 
-  # ── Public School Website (Next.js) ──────────────────────────────────────────
+  # ── Public School Website (Next.js) ─────────────────────────────────────────
   website:
     build:
       context: ./website
@@ -90,8 +59,6 @@ services:
     restart: unless-stopped
     expose:
       - '3001'
-    environment:
-      NODE_ENV: production
     depends_on:
       - backend
 
