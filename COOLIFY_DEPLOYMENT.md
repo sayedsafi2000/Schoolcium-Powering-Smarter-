@@ -1,23 +1,29 @@
 # Coolify Deployment Guide — Schoolcium
 
-## Services & Ports
+## Live URLs
+
+| Service      | URL                                               |
+|--------------|---------------------------------------------------|
+| Public Site  | https://schoolcium.pixelsbee.com                  |
+| Admin Panel  | https://schoolciumadmin.pixelsbee.com             |
+| Backend API  | https://schoolciumserver.pixelsbee.com            |
+
+## Service Ports
 
 | Service | Description        | Internal Port |
 |---------|--------------------|---------------|
-| mongo   | MongoDB database   | 27017         |
+| mongo   | MongoDB database   | 27017 (internal only) |
 | backend | Express API        | 5000          |
 | admin   | Admin Panel (Next) | 3000          |
 | website | Public Website     | 3001          |
 
 ---
 
-## Step 1 — Push to GitHub
-
-Make sure your repo is public (or connected via Coolify's Git source).
+## Step 1 — Push to GitHub (public repo)
 
 ```bash
 git add .
-git commit -m "Add Docker + Coolify deployment config"
+git commit -m "chore: add Docker + Coolify deployment config"
 git push origin main
 ```
 
@@ -26,68 +32,85 @@ git push origin main
 ## Step 2 — Create Project in Coolify
 
 1. Coolify Dashboard → **New Project**
-2. Add a new **Resource** → **Docker Compose**
+2. Add Resource → **Docker Compose**
 3. Connect your GitHub repo
-4. Set **Docker Compose Location**: `docker-compose.coolify.yml`
+4. **Docker Compose Location**: `docker-compose.coolify.yml`
 
 ---
 
-## Step 3 — Set Environment Variables
+## Step 3 — Set Domains in Coolify UI
 
-In Coolify UI → **Environment Variables**, add:
+> ⚠️ You MUST include the internal container port in the domain field.
+> This tells Traefik's reverse proxy which port to forward traffic to.
+
+| Service | Domain field in Coolify                         |
+|---------|-------------------------------------------------|
+| backend | `https://schoolciumserver.pixelsbee.com:5000`   |
+| admin   | `https://schoolciumadmin.pixelsbee.com:3000`    |
+| website | `https://schoolcium.pixelsbee.com:3001`         |
+
+---
+
+## Step 4 — Set Environment Variables in Coolify UI
+
+Go to **Environment Variables** tab and add:
 
 ```
 MONGO_ROOT_USER=schoolcium
-MONGO_ROOT_PASS=your_strong_password_here
+MONGO_ROOT_PASS=<your strong password>
 
-MONGODB_URI=mongodb://schoolcium:your_strong_password_here@mongo:27017/school-management?authSource=admin
+MONGODB_URI=mongodb://schoolcium:<your strong password>@mongo:27017/school-management?authSource=admin
 
-JWT_SECRET=generate-with-openssl-rand-base64-64
+JWT_SECRET=<run: openssl rand -base64 64>
+JWT_EXPIRE=30d
 
 CLOUDINARY_CLOUD_NAME=domn2k79e
 CLOUDINARY_API_KEY=382733537575279
 CLOUDINARY_API_SECRET=X8Lqo_AbMGsrSefDBzQk46aDJ40
 
-CORS_ORIGIN=https://admin.yourdomain.com,https://yourdomain.com
+CORS_ORIGIN=https://schoolciumadmin.pixelsbee.com,https://schoolcium.pixelsbee.com
 
-NEXT_PUBLIC_API_URL=https://api.yourdomain.com/api
-WEBSITE_API_URL=https://api.yourdomain.com/api
+NEXT_PUBLIC_API_URL=https://schoolciumserver.pixelsbee.com/api
+WEBSITE_API_URL=https://schoolciumserver.pixelsbee.com/api
 ```
-
----
-
-## Step 4 — Set Domains in Coolify UI
-
-> ⚠️ Include the internal container port in the domain field — this tells Traefik which port to proxy to.
-
-| Service | Domain field in Coolify              |
-|---------|---------------------------------------|
-| backend | `https://api.yourdomain.com:5000`     |
-| admin   | `https://admin.yourdomain.com:3000`   |
-| website | `https://yourdomain.com:3001`         |
 
 ---
 
 ## Step 5 — Deploy
 
 Click **Deploy**. Coolify will:
-1. Pull your repo
-2. Build all 4 Docker images
-3. Start containers
-4. Route traffic via Traefik
+1. Pull your GitHub repo
+2. Build all 4 Docker images (`mongo`, `backend`, `admin`, `website`)
+3. Start containers in the correct order (mongo → backend → admin + website)
+4. Route HTTPS traffic via Traefik
 
 ---
 
-## Local Testing (before pushing)
+## Step 6 — Create First Admin User
+
+After deploy, register once via API:
 
 ```bash
-# Copy and fill in your values
-cp .env.example .env
+curl -X POST https://schoolciumserver.pixelsbee.com/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"YourStrongPassword","role":"admin"}'
+```
 
-# Start everything locally with host ports exposed
+Then login at: **https://schoolciumadmin.pixelsbee.com**
+
+---
+
+## Local Testing
+
+```bash
+# Copy env template
+cp .env.example .env
+# Edit .env with your values
+
+# Start everything locally with host ports
 docker compose -f docker-compose.yml -f docker-compose.local.yml up --build
 
-# Access:
+# Access locally:
 # Backend  → http://localhost:5000
 # Admin    → http://localhost:3000
 # Website  → http://localhost:3001
@@ -95,36 +118,24 @@ docker compose -f docker-compose.yml -f docker-compose.local.yml up --build
 
 ---
 
-## Useful Commands
+## Useful Docker Commands
 
 ```bash
-# View logs
+# View all logs
 docker compose logs -f
 
-# View logs for one service
+# Logs for one service
 docker compose logs -f backend
 
-# Restart one service
+# Restart one service (without rebuild)
 docker compose restart backend
 
-# Stop everything
+# Rebuild and restart one service
+docker compose up -d --build backend
+
+# Stop all
 docker compose down
 
-# Stop and remove volumes (WARNING: deletes MongoDB data)
+# Stop and wipe MongoDB data (DANGER)
 docker compose down -v
 ```
-
----
-
-## First Admin User
-
-After first deploy, register via:
-```
-POST https://api.yourdomain.com/api/auth/register
-{
-  "username": "admin",
-  "password": "YourPassword123",
-  "role": "admin"
-}
-```
-Then login at `https://admin.yourdomain.com`
