@@ -1,14 +1,27 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import { useRouter } from 'next/router'
 import Link from 'next/link'
 import axios from 'axios'
+import { Plus, Trash2, Users as UsersIcon } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { DataTable } from '@/components/custom/data-table'
+import { GlassCard } from '@/components/custom/glass-card'
+import { PageActions } from '@/components/custom/page-header'
+import { Skeleton } from '@/components/ui/skeleton'
+import { toast } from 'sonner'
 
 export default function Classes({ user }) {
+  const router = useRouter()
   const [classes, setClasses] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (user?.role === 'student') {
+      router.push('/')
+      return
+    }
     fetchClasses()
-  }, [])
+  }, [user])
 
   const fetchClasses = async () => {
     try {
@@ -18,67 +31,54 @@ export default function Classes({ user }) {
       })
       setClasses(res.data)
     } catch (error) {
-      console.error('Error fetching classes:', error)
+      toast.error('Failed to load classes')
     } finally {
       setLoading(false)
     }
   }
 
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this class?')) return
-    
+    if (!confirm('Delete this class?')) return
     try {
       const token = localStorage.getItem('token')
       await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/academic/classes/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
+      toast.success('Class deleted')
       fetchClasses()
     } catch (error) {
-      alert('Error deleting class: ' + (error.response?.data?.message || error.message))
+      toast.error('Failed to delete class')
     }
   }
 
-  if (loading) return <div>Loading...</div>
+  const columns = useMemo(() => [
+    { accessorKey: 'className', header: 'Class', cell: ({ row }) => <span className="font-medium">{row.getValue('className')}</span> },
+    { accessorKey: 'section', header: 'Section', cell: ({ row }) => row.getValue('section') || '—' },
+    { accessorKey: 'capacity', header: 'Capacity' },
+    { id: 'teacher', header: 'Class Teacher', cell: ({ row }) => row.original.classTeacher?.personalInfo?.firstName || 'Not assigned' },
+    { id: 'students', header: 'Students', cell: ({ row }) => {
+      const cls = row.original
+      return <span className="inline-flex items-center gap-1.5"><UsersIcon className="h-3.5 w-3.5 text-muted-foreground" />{cls.currentStrength || 0}/{cls.capacity || 0}</span>
+    }},
+    { id: 'actions', header: '', cell: ({ row }) => user?.role === 'admin' ? (
+      <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleDelete(row.original._id)}>
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    ) : null },
+  ], [user])
+
+  if (loading) {
+    return <div className="page-shell"><Skeleton className="h-10 w-full" /><Skeleton className="h-80 w-full" /></div>
+  }
 
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <h1>Classes</h1>
-        <Link href="/classes/new" className="btn btn-primary">Add Class</Link>
-      </div>
-      <table className="data-table">
-        <thead>
-          <tr>
-            <th>Class Name</th>
-            <th>Section</th>
-            <th>Class Teacher</th>
-            <th>Capacity</th>
-            <th>Current Strength</th>
-            <th>Academic Year</th>
-            <th>Room Number</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {classes.map(cls => (
-            <tr key={cls._id}>
-              <td>{cls.className}</td>
-              <td>{cls.section || '-'}</td>
-              <td>{cls.classTeacher?.personalInfo?.firstName || 'N/A'}</td>
-              <td>{cls.capacity}</td>
-              <td>{cls.currentStrength}</td>
-              <td>{cls.academicYear || '-'}</td>
-              <td>{cls.roomNumber || '-'}</td>
-              <td>
-                <Link href={`/classes/${cls._id}`} className="btn btn-sm">View</Link>
-                <Link href={`/classes/${cls._id}/edit`} className="btn btn-sm">Edit</Link>
-                <button onClick={() => handleDelete(cls._id)} className="btn btn-sm btn-danger">Delete</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="page-shell">
+      {user?.role === 'admin' && (
+        <PageActions>
+          <Link href="/classes/new"><Button><Plus className="h-4 w-4 mr-2" />Add class</Button></Link>
+        </PageActions>
+      )}
+      <GlassCard><DataTable columns={columns} data={classes} searchKey="className" /></GlassCard>
     </div>
   )
 }
-

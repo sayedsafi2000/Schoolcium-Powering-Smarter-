@@ -1,64 +1,74 @@
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/router'
 import Link from 'next/link'
 import axios from 'axios'
+import {
+  Users, UserCheck, CheckCircle, DollarSign, BookOpen, TrendingUp,
+  Calendar, Bell, Plus, FileText, GraduationCap
+} from 'lucide-react'
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
+import { StatCard } from '@/components/custom/stat-card'
+import { ChartCard } from '@/components/custom/chart-card'
+import { GlassCard, GlassCardHeader, GlassCardTitle, GlassCardContent } from '@/components/custom/glass-card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { formatCurrency } from '@/lib/utils'
+
+function QuickLink({ href, icon: Icon, label }) {
+  return (
+    <Link href={href} className="surface-card block p-4 text-center transition-colors hover:bg-muted/50">
+      <div className="mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded-md bg-primary/10 text-primary">
+        <Icon className="h-4 w-4" />
+      </div>
+      <p className="text-sm font-medium">{label}</p>
+    </Link>
+  )
+}
+
+function ListRow({ children }) {
+  return (
+    <div className="flex items-center gap-4 rounded-md border border-border px-4 py-3">
+      {children}
+    </div>
+  )
+}
 
 export default function Home({ user }) {
-  const router = useRouter()
   const [stats, setStats] = useState(null)
-  const [recentActivities, setRecentActivities] = useState([])
-  const [upcomingExams, setUpcomingExams] = useState([])
-  const [pendingFees, setPendingFees] = useState([])
-  const [announcements, setAnnouncements] = useState([])
   const [attendanceChart, setAttendanceChart] = useState([])
+  const [upcomingExams, setUpcomingExams] = useState([])
+  const [announcements, setAnnouncements] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!user && router.pathname !== '/') {
-      router.push('/login')
-      return
-    }
-
-    if (user) {
-      fetchDashboardData()
-    }
+    if (!user) return
+    fetchDashboardData()
   }, [user])
 
   const fetchDashboardData = async () => {
     try {
       const token = localStorage.getItem('token')
-      
-      // Fetch dashboard stats
+
       const statsRes = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/reports/dashboard`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       setStats(statsRes.data)
 
-      // Fetch upcoming exams
       const examsRes = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/exams`, {
         headers: { Authorization: `Bearer ${token}` }
       })
-      const upcoming = examsRes.data
-        .filter(exam => new Date(exam.startDate) >= new Date())
-        .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
-        .slice(0, 5)
-      setUpcomingExams(upcoming)
+      setUpcomingExams(
+        examsRes.data
+          .filter(exam => new Date(exam.startDate) >= new Date())
+          .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
+          .slice(0, 5)
+      )
 
-      // Fetch recent announcements
       const annRes = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/communication/announcements`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       setAnnouncements(annRes.data.slice(0, 5))
 
-      // Fetch pending fees (for admin)
-      if (user?.role === 'admin') {
-        const feesRes = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/fees?status=Pending`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-        setPendingFees(feesRes.data.slice(0, 5))
-      }
-
-      // Fetch attendance chart data (last 7 days)
       const today = new Date()
       const last7Days = []
       for (let i = 6; i >= 0; i--) {
@@ -66,16 +76,20 @@ export default function Home({ user }) {
         date.setDate(date.getDate() - i)
         last7Days.push(date.toISOString().split('T')[0])
       }
-      
+
       const attendanceData = await Promise.all(
         last7Days.map(date =>
           axios.get(`${process.env.NEXT_PUBLIC_API_URL}/attendance?date=${date}`, {
             headers: { Authorization: `Bearer ${token}` }
           }).then(res => ({
-            date,
+            date: new Date(date).toLocaleDateString('en-US', { weekday: 'short' }),
             present: res.data.filter(a => a.status === 'Present').length,
-            absent: res.data.filter(a => a.status === 'Absent').length
-          })).catch(() => ({ date, present: 0, absent: 0 }))
+            absent: res.data.filter(a => a.status === 'Absent').length,
+          })).catch(() => ({
+            date: new Date(date).toLocaleDateString('en-US', { weekday: 'short' }),
+            present: 0,
+            absent: 0,
+          }))
         )
       )
       setAttendanceChart(attendanceData)
@@ -88,13 +102,22 @@ export default function Home({ user }) {
 
   if (!user) {
     return (
-      <div className="home-container">
-        <div className="hero">
-          <h1>School Management System</h1>
-          <p>Comprehensive solution for managing your school</p>
-          <div className="cta-buttons">
-            <Link href="/login" className="btn btn-primary">Login</Link>
-            <Link href="/register" className="btn btn-secondary">Register</Link>
+      <div className="auth-shell flex min-h-screen items-center justify-center p-6">
+        <div className="w-full max-w-lg text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <GraduationCap className="h-6 w-6" />
+          </div>
+          <h1 className="text-3xl font-semibold tracking-tight">Schoolcium</h1>
+          <p className="mt-2 text-muted-foreground">
+            A practical school management system for attendance, fees, exams, and daily operations.
+          </p>
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Link href="/login">
+              <Button size="lg" className="min-w-[140px]">Sign in</Button>
+            </Link>
+            <Link href="/register">
+              <Button size="lg" variant="outline" className="min-w-[140px]">Create account</Button>
+            </Link>
           </div>
         </div>
       </div>
@@ -105,451 +128,183 @@ export default function Home({ user }) {
   const isTeacher = user?.role === 'teacher'
   const isStudent = user?.role === 'student'
 
-  // Student Dashboard
-  if (isStudent) {
+  if (loading) {
     return (
-      <div className="dashboard">
-        <div className="dashboard-welcome">
-          <div className="welcome-card">
-            <h1>Welcome back, {user?.username}! 👋</h1>
-            <p>Here's what's happening today</p>
-          </div>
-        </div>
-
-        <div className="stats-grid">
-          <div className="stat-card stat-card-primary">
-            <div className="stat-icon">📊</div>
-            <div className="stat-content">
-              <h3>My GPA</h3>
-              <p className="stat-number">4.2</p>
-            </div>
-          </div>
-          <div className="stat-card stat-card-success">
-            <div className="stat-icon">✅</div>
-            <div className="stat-content">
-              <h3>Attendance</h3>
-              <p className="stat-number">95%</p>
-            </div>
-          </div>
-          <div className="stat-card stat-card-warning">
-            <div className="stat-icon">💰</div>
-            <div className="stat-content">
-              <h3>Pending Fees</h3>
-              <p className="stat-number">$250</p>
-            </div>
-          </div>
-          <div className="stat-card stat-card-info">
-            <div className="stat-icon">📚</div>
-            <div className="stat-content">
-              <h3>Books Issued</h3>
-              <p className="stat-number">3</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="dashboard-grid">
-          <div className="dashboard-widget">
-            <div className="widget-header">
-              <h2>📅 My Schedule Today</h2>
-            </div>
-            <div className="widget-content">
-              <div className="schedule-item">
-                <div className="schedule-time">09:00 - 10:00</div>
-                <div className="schedule-details">
-                  <strong>Mathematics</strong>
-                  <span>Room 101</span>
-                </div>
-              </div>
-              <div className="schedule-item">
-                <div className="schedule-time">10:15 - 11:15</div>
-                <div className="schedule-details">
-                  <strong>Science</strong>
-                  <span>Room 102</span>
-                </div>
-              </div>
-              <div className="schedule-item">
-                <div className="schedule-time">11:30 - 12:30</div>
-                <div className="schedule-details">
-                  <strong>English</strong>
-                  <span>Room 103</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="dashboard-widget">
-            <div className="widget-header">
-              <h2>📝 Upcoming Exams</h2>
-            </div>
-            <div className="widget-content">
-              {upcomingExams.length > 0 ? (
-                upcomingExams.map(exam => (
-                  <div key={exam._id} className="exam-item">
-                    <div className="exam-date">
-                      {new Date(exam.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    </div>
-                    <div className="exam-details">
-                      <strong>{exam.examName}</strong>
-                      <span>{exam.examType} - {exam.subject?.subjectName}</span>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="empty-state">No upcoming exams</p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="quick-links">
-          <h2>Quick Access</h2>
-          <div className="links-grid">
-            <Link href="/student/profile" className="link-card">
-              <span className="link-icon">👤</span>
-              <div>My Profile</div>
-            </Link>
-            <Link href="/student/fees" className="link-card">
-              <span className="link-icon">💰</span>
-              <div>My Fees</div>
-            </Link>
-            <Link href="/student/routine" className="link-card">
-              <span className="link-icon">📅</span>
-              <div>My Routine</div>
-            </Link>
-            <Link href="/student/results" className="link-card">
-              <span className="link-icon">📈</span>
-              <div>My Results</div>
-            </Link>
-            <Link href="/student/books" className="link-card">
-              <span className="link-icon">📚</span>
-              <div>My Books</div>
-            </Link>
-          </div>
+      <div className="page-shell">
+        <Skeleton className="h-20 w-full rounded-lg" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-24 rounded-lg" />
+          ))}
         </div>
       </div>
     )
   }
 
-  // Admin/Teacher Dashboard
-  const maxAttendance = Math.max(...attendanceChart.map(d => d.present + d.absent), 1)
+  if (isStudent) {
+    return (
+      <div className="page-shell">
+        <div className="surface-card p-5">
+          <p className="text-sm text-muted-foreground">Welcome back</p>
+          <h2 className="mt-1 text-lg font-semibold">{user?.username}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Here is a quick view of your day.</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard icon={TrendingUp} title="My GPA" value="4.2" change="+0.3 this semester" variant="success" />
+          <StatCard icon={CheckCircle} title="Attendance" value="95%" variant="success" />
+          <StatCard icon={DollarSign} title="Pending Fees" value="$250" variant="warning" />
+          <StatCard icon={BookOpen} title="Books Issued" value="3" variant="info" />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <GlassCard>
+            <GlassCardHeader>
+              <GlassCardTitle className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                Today&apos;s schedule
+              </GlassCardTitle>
+            </GlassCardHeader>
+            <GlassCardContent className="space-y-2 pt-0">
+              {[
+                { time: '09:00 - 10:00', subject: 'Mathematics', room: 'Room 101' },
+                { time: '10:15 - 11:15', subject: 'Science', room: 'Room 102' },
+                { time: '11:30 - 12:30', subject: 'English', room: 'Room 103' },
+              ].map((schedule, i) => (
+                <ListRow key={i}>
+                  <div className="w-24 shrink-0 text-sm font-medium text-muted-foreground">{schedule.time}</div>
+                  <div>
+                    <div className="font-medium">{schedule.subject}</div>
+                    <div className="text-sm text-muted-foreground">{schedule.room}</div>
+                  </div>
+                </ListRow>
+              ))}
+            </GlassCardContent>
+          </GlassCard>
+
+          <GlassCard>
+            <GlassCardHeader>
+              <GlassCardTitle className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-muted-foreground" />
+                Upcoming exams
+              </GlassCardTitle>
+            </GlassCardHeader>
+            <GlassCardContent className="space-y-2 pt-0">
+              {upcomingExams.length > 0 ? (
+                upcomingExams.map((exam) => (
+                  <ListRow key={exam._id}>
+                    <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-md border border-border bg-muted text-sm">
+                      <span className="text-xs uppercase text-muted-foreground">
+                        {new Date(exam.startDate).toLocaleDateString('en-US', { month: 'short' })}
+                      </span>
+                      <span className="text-lg font-semibold">{new Date(exam.startDate).getDate()}</span>
+                    </div>
+                    <div>
+                      <div className="font-medium">{exam.examName}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {exam.examType} · {exam.subject?.subjectName || 'General'}
+                      </div>
+                    </div>
+                  </ListRow>
+                ))
+              ) : (
+                <p className="py-8 text-center text-sm text-muted-foreground">No upcoming exams</p>
+              )}
+            </GlassCardContent>
+          </GlassCard>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+          <QuickLink href="/student/profile" icon={Users} label="My Profile" />
+          <QuickLink href="/student/fees" icon={DollarSign} label="My Fees" />
+          <QuickLink href="/student/routine" icon={Calendar} label="My Routine" />
+          <QuickLink href="/student/results" icon={TrendingUp} label="My Results" />
+          <QuickLink href="/student/books" icon={BookOpen} label="My Books" />
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="dashboard">
-      <div className="dashboard-welcome">
-        <div className="welcome-card">
-          <h1>Welcome back, {user?.username}! 👋</h1>
-          <p>{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-        </div>
+    <div className="page-shell">
+      <div className="surface-card p-5">
+        <p className="text-sm text-muted-foreground">Welcome back</p>
+        <h2 className="mt-1 text-lg font-semibold">{user?.username}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+        </p>
       </div>
 
       {stats && (isAdmin || isTeacher) && (
-        <div className="stats-grid">
-          <div className="stat-card stat-card-primary">
-            <div className="stat-icon">👨‍🎓</div>
-            <div className="stat-content">
-              <h3>Total Students</h3>
-              <p className="stat-number">{stats.totalStudents || 0}</p>
-              <span className="stat-change positive">+12% from last month</span>
-            </div>
-          </div>
-          <div className="stat-card stat-card-success">
-            <div className="stat-icon">👨‍🏫</div>
-            <div className="stat-content">
-              <h3>Total Teachers</h3>
-              <p className="stat-number">{stats.totalTeachers || 0}</p>
-              <span className="stat-change positive">+2 this month</span>
-            </div>
-          </div>
-          <div className="stat-card stat-card-warning">
-            <div className="stat-icon">✅</div>
-            <div className="stat-content">
-              <h3>Today's Attendance</h3>
-              <p className="stat-number">{stats.todayAttendance || 0}</p>
-              <span className="stat-change">Active today</span>
-            </div>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard icon={Users} title="Total Students" value={stats.totalStudents || 0} variant="info" />
+          <StatCard icon={UserCheck} title="Total Teachers" value={stats.totalTeachers || 0} variant="success" />
+          <StatCard icon={CheckCircle} title="Today's Attendance" value={stats.todayAttendance || 0} variant="default" />
           {isAdmin && (
-            <>
-              <div className="stat-card stat-card-info">
-                <div className="stat-icon">💰</div>
-                <div className="stat-content">
-                  <h3>Today's Revenue</h3>
-                  <p className="stat-number">${stats.todayRevenue || 0}</p>
-                  <span className="stat-change positive">+8% from yesterday</span>
-                </div>
-              </div>
-              <div className="stat-card stat-card-danger">
-                <div className="stat-icon">⏰</div>
-                <div className="stat-content">
-                  <h3>Pending Fees</h3>
-                  <p className="stat-number">{pendingFees.length}</p>
-                  <span className="stat-change">Requires attention</span>
-                </div>
-              </div>
-              <div className="stat-card stat-card-secondary">
-                <div className="stat-icon">📚</div>
-                <div className="stat-content">
-                  <h3>Library Books</h3>
-                  <p className="stat-number">1,234</p>
-                  <span className="stat-change">Total collection</span>
-                </div>
-              </div>
-            </>
+            <StatCard icon={DollarSign} title="Today's Revenue" value={formatCurrency(stats.todayRevenue || 0)} variant="success" />
           )}
         </div>
       )}
 
-      <div className="dashboard-grid">
-        {/* Attendance Chart */}
-        {(isAdmin || isTeacher) && (
-          <div className="dashboard-widget widget-chart">
-            <div className="widget-header">
-              <h2>📊 Attendance Trend (Last 7 Days)</h2>
-            </div>
-            <div className="widget-content">
-              <div className="chart-container">
-                {attendanceChart.map((day, index) => {
-                  const total = day.present + day.absent
-                  const presentPercent = maxAttendance > 0 ? (day.present / maxAttendance) * 100 : 0
-                  return (
-                    <div key={index} className="chart-bar-group">
-                      <div className="chart-bars">
-                        <div 
-                          className="chart-bar chart-bar-present"
-                          style={{ height: `${(day.present / maxAttendance) * 100}%` }}
-                          title={`Present: ${day.present}`}
-                        />
-                        <div 
-                          className="chart-bar chart-bar-absent"
-                          style={{ height: `${(day.absent / maxAttendance) * 100}%` }}
-                          title={`Absent: ${day.absent}`}
-                        />
-                      </div>
-                      <div className="chart-label">
-                        {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-              <div className="chart-legend">
-                <span className="legend-item"><span className="legend-color present"></span>Present</span>
-                <span className="legend-item"><span className="legend-color absent"></span>Absent</span>
-              </div>
-            </div>
-          </div>
-        )}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <ChartCard title="Attendance trend" description="Last 7 days">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={attendanceChart}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12 }} />
+              <Tooltip />
+              <Legend />
+              <Area type="monotone" dataKey="present" stroke="#15803d" fill="#15803d" fillOpacity={0.15} />
+              <Area type="monotone" dataKey="absent" stroke="#dc2626" fill="#dc2626" fillOpacity={0.1} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </ChartCard>
 
-        {/* Recent Activities */}
-        <div className="dashboard-widget">
-          <div className="widget-header">
-            <h2>⚡ Recent Activities</h2>
-          </div>
-          <div className="widget-content">
-            <div className="activity-list">
-              <div className="activity-item">
-                <div className="activity-icon">➕</div>
-                <div className="activity-content">
-                  <strong>New student registered</strong>
-                  <span>2 minutes ago</span>
-                </div>
-              </div>
-              <div className="activity-item">
-                <div className="activity-icon">📝</div>
-                <div className="activity-content">
-                  <strong>Exam created: Midterm Math</strong>
-                  <span>15 minutes ago</span>
-                </div>
-              </div>
-              <div className="activity-item">
-                <div className="activity-icon">💰</div>
-                <div className="activity-content">
-                  <strong>Fee payment received</strong>
-                  <span>1 hour ago</span>
-                </div>
-              </div>
-              <div className="activity-item">
-                <div className="activity-icon">📚</div>
-                <div className="activity-content">
-                  <strong>Book issued to student</strong>
-                  <span>2 hours ago</span>
-                </div>
-              </div>
+        <GlassCard>
+          <GlassCardHeader>
+            <div className="flex items-center justify-between gap-3">
+              <GlassCardTitle className="flex items-center gap-2">
+                <Bell className="h-4 w-4 text-muted-foreground" />
+                Announcements
+              </GlassCardTitle>
+              <Link href="/communication">
+                <Button variant="ghost" size="sm">View all</Button>
+              </Link>
             </div>
-          </div>
-        </div>
-
-        {/* Upcoming Exams */}
-        {(isAdmin || isTeacher) && (
-          <div className="dashboard-widget">
-            <div className="widget-header">
-              <h2>📝 Upcoming Exams</h2>
-              <Link href="/exams" className="widget-action">View All</Link>
-            </div>
-            <div className="widget-content">
-              {upcomingExams.length > 0 ? (
-                upcomingExams.map(exam => (
-                  <div key={exam._id} className="exam-item">
-                    <div className="exam-date">
-                      {new Date(exam.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    </div>
-                    <div className="exam-details">
-                      <strong>{exam.examName}</strong>
-                      <span>{exam.examType} - {exam.class?.className} - {exam.subject?.subjectName}</span>
-                    </div>
-                    <div className="exam-status">
-                      <span className={`status status-${exam.status?.toLowerCase()}`}>{exam.status}</span>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="empty-state">No upcoming exams</p>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Announcements */}
-        <div className="dashboard-widget">
-          <div className="widget-header">
-            <h2>📢 Latest Announcements</h2>
-            <Link href="/communication" className="widget-action">View All</Link>
-          </div>
-          <div className="widget-content">
+          </GlassCardHeader>
+          <GlassCardContent className="space-y-2 pt-0">
             {announcements.length > 0 ? (
-              announcements.map(announcement => (
-                <div key={announcement._id} className="announcement-item">
-                  <div className="announcement-badge">{announcement.type}</div>
-                  <div className="announcement-content">
-                    <strong>{announcement.title}</strong>
-                    <span>{new Date(announcement.publishDate).toLocaleDateString()}</span>
+              announcements.map((announcement) => (
+                <div key={announcement._id} className="rounded-md border border-border px-4 py-3">
+                  <div className="flex items-start gap-3">
+                    <Badge variant="outline">{announcement.type}</Badge>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium">{announcement.title}</p>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {new Date(announcement.publishDate || announcement.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="empty-state">No announcements</p>
+              <p className="py-8 text-center text-sm text-muted-foreground">No announcements yet</p>
             )}
-          </div>
-        </div>
-
-        {/* Pending Fees (Admin Only) */}
-        {isAdmin && pendingFees.length > 0 && (
-          <div className="dashboard-widget widget-alert">
-            <div className="widget-header">
-              <h2>⚠️ Pending Fees</h2>
-              <Link href="/fees" className="widget-action">View All</Link>
-            </div>
-            <div className="widget-content">
-              {pendingFees.map(fee => (
-                <div key={fee._id} className="fee-item">
-                  <div className="fee-student">{fee.studentId?.personalInfo?.firstName || 'Student'}</div>
-                  <div className="fee-amount">${fee.amount - (fee.paidAmount || 0)}</div>
-                  <div className="fee-date">{new Date(fee.dueDate).toLocaleDateString()}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Quick Actions */}
-        <div className="dashboard-widget">
-          <div className="widget-header">
-            <h2>⚡ Quick Actions</h2>
-          </div>
-          <div className="widget-content">
-            <div className="quick-actions-grid">
-              {(isAdmin || isTeacher) && (
-                <>
-                  <Link href="/students/new" className="quick-action-btn">
-                    <span>➕</span>
-                    <div>Add Student</div>
-                  </Link>
-                  {isAdmin && (
-                    <Link href="/teachers/new" className="quick-action-btn">
-                      <span>👨‍🏫</span>
-                      <div>Add Teacher</div>
-                    </Link>
-                  )}
-                  <Link href="/exams/new" className="quick-action-btn">
-                    <span>📝</span>
-                    <div>Create Exam</div>
-                  </Link>
-                  <Link href="/attendance" className="quick-action-btn">
-                    <span>✅</span>
-                    <div>Mark Attendance</div>
-                  </Link>
-                </>
-              )}
-              {isAdmin && (
-                <>
-                  <Link href="/fees" className="quick-action-btn">
-                    <span>💰</span>
-                    <div>Collect Fee</div>
-                  </Link>
-                  <Link href="/library/new" className="quick-action-btn">
-                    <span>📚</span>
-                    <div>Add Book</div>
-                  </Link>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
+          </GlassCardContent>
+        </GlassCard>
       </div>
 
-      <div className="quick-links">
-        <h2>Quick Links</h2>
-        <div className="links-grid">
-          {(isAdmin || isTeacher) && (
-            <Link href="/students" className="link-card">
-              <span className="link-icon">👨‍🎓</span>
-              <div>Students</div>
-            </Link>
-          )}
-          {isAdmin && (
-            <Link href="/teachers" className="link-card">
-              <span className="link-icon">👨‍🏫</span>
-              <div>Teachers</div>
-            </Link>
-          )}
-          {(isAdmin || isTeacher) && (
-            <Link href="/attendance" className="link-card">
-              <span className="link-icon">✅</span>
-              <div>Attendance</div>
-            </Link>
-          )}
-          {(isAdmin || isTeacher) && (
-            <Link href="/exams" className="link-card">
-              <span className="link-icon">📝</span>
-              <div>Exams</div>
-            </Link>
-          )}
-          {isAdmin && (
-            <Link href="/fees" className="link-card">
-              <span className="link-icon">💰</span>
-              <div>Fees</div>
-            </Link>
-          )}
-          {(isAdmin || isTeacher) && (
-            <Link href="/library" className="link-card">
-              <span className="link-icon">📚</span>
-              <div>Library</div>
-            </Link>
-          )}
-          {isAdmin && (
-            <>
-              <Link href="/reports" className="link-card">
-                <span className="link-icon">📊</span>
-                <div>Reports</div>
-              </Link>
-              <Link href="/settings" className="link-card">
-                <span className="link-icon">⚙️</span>
-                <div>Settings</div>
-              </Link>
-            </>
-          )}
+      {(isAdmin || isTeacher) && (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          <QuickLink href="/students/new" icon={Plus} label="Add Student" />
+          {isAdmin && <QuickLink href="/teachers/new" icon={Plus} label="Add Teacher" />}
+          <QuickLink href="/exams/new" icon={FileText} label="Create Exam" />
+          <QuickLink href="/attendance" icon={CheckCircle} label="Attendance" />
+          {isAdmin && <QuickLink href="/fees" icon={DollarSign} label="Collect Fee" />}
+          {isAdmin && <QuickLink href="/library/new" icon={BookOpen} label="Add Book" />}
         </div>
-      </div>
+      )}
     </div>
   )
 }

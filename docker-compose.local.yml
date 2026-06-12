@@ -1,0 +1,29 @@
+# Local development — exposes host ports so you can open in browser.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.local.yml up --build
+#
+# Access:
+#   Backend API  → http://localhost:5000
+#   Admin Panel  → http://localhost:3000
+#   Public Site  → http://localhost:3001
+#   MongoDB      → localhost:27017 (for tools like MongoDB Compass)
+#
+# Coolify: use docker-compose.yml or docker-compose.coolify.yml only (not this file).
+
+services:
+  mongo:
+    ports:
+      - '${SCHOOL_MONGO_PORT:-27017}:27017'
+
+  backend:
+    ports:
+      - '${SCHOOL_BACKEND_PORT:-5000}:5000'
+
+  admin:
+    ports:
+      - '${SCHOOL_ADMIN_PORT:-3000}:3000'
+
+  website:
+    ports:
+      - '${SCHOOL_WEBSITE_PORT:-3001}:3001'

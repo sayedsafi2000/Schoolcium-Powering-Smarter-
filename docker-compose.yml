@@ -1,0 +1,99 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Schoolcium · Full Stack Docker Compose
+# Services: mongo | backend (5000) | admin/frontend (3000) | website (3001)
+#
+# Coolify setup:
+#   Build Pack     → Docker Compose
+#   Compose file   → docker-compose.yml   (or docker-compose.coolify.yml)
+#
+#   Domains (Coolify UI) — include internal port in the domain string:
+#     backend  → https://api.yourdomain.com:5000
+#     admin    → https://admin.yourdomain.com:3000
+#     website  → https://yourdomain.com:3001
+#
+#   Environment Variables (set in Coolify UI or .env on server):
+#     MONGODB_URI, JWT_SECRET, CLOUDINARY_CLOUD_NAME,
+#     CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET,
+#     NEXT_PUBLIC_API_URL, WEBSITE_API_URL
+#
+# Local dev:
+#   docker compose -f docker-compose.yml -f docker-compose.local.yml up --build
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── MongoDB ──────────────────────────────────────────────────────────────────
+  mongo:
+    image: mongo:7-jammy
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-schoolcium}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASS:-schoolcium_secret}
+      MONGO_INITDB_DATABASE: school-management
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ['CMD', 'mongosh', '--quiet', '--eval', "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  # ── Backend API ───────────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    expose:
+      - '5000'
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      MONGODB_URI: ${MONGODB_URI:-mongodb://schoolcium:schoolcium_secret@mongo:27017/school-management?authSource=admin}
+      JWT_SECRET: ${JWT_SECRET:-change-me-use-a-long-random-secret}
+      JWT_EXPIRE: ${JWT_EXPIRE:-30d}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-domn2k79e}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-382733537575279}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-X8Lqo_AbMGsrSefDBzQk46aDJ40}
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  # ── Admin Panel (Next.js) ─────────────────────────────────────────────────────
+  admin:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:5000/api}
+    restart: unless-stopped
+    expose:
+      - '3000'
+    environment:
+      NODE_ENV: production
+    depends_on:
+      - backend
+
+  # ── Public School Website (Next.js) ──────────────────────────────────────────
+  website:
+    build:
+      context: ./website
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${WEBSITE_API_URL:-http://localhost:5000/api}
+        NEXT_PUBLIC_SCHOOL_NAME: ${SCHOOL_NAME:-Ideal Vision Academy}
+        NEXT_PUBLIC_SCHOOL_PHONE: ${SCHOOL_PHONE:-01773-763422}
+        NEXT_PUBLIC_SCHOOL_EMAIL: ${SCHOOL_EMAIL:-idealvisionacademy@gmail.com}
+        NEXT_PUBLIC_SCHOOL_ADDRESS: ${SCHOOL_ADDRESS:-Badaghat, Sunamganj, Bangladesh}
+    restart: unless-stopped
+    expose:
+      - '3001'
+    environment:
+      NODE_ENV: production
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:

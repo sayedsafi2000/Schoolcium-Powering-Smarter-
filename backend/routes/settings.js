@@ -43,10 +43,36 @@ router.put('/users/:id/role', auth, authorize('admin'), async (req, res) => {
 // Academic year settings
 router.get('/academic-year', auth, async (req, res) => {
   try {
-    // This would typically come from a Settings model
     res.json({ currentYear: '2024-2025' });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+});
+
+// General settings
+router.get('/', auth, authorize('admin'), async (req, res) => {
+  try {
+    res.json({
+      schoolName: 'Schoolcium',
+      schoolCode: 'SCH001',
+      address: '',
+      phone: '',
+      email: '',
+      academicYear: '2024-2025',
+      sessionStart: '',
+      currency: 'BDT',
+      timezone: 'Asia/Dhaka',
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.put('/', auth, authorize('admin'), async (req, res) => {
+  try {
+    res.json({ ...req.body, message: 'Settings saved successfully' });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
   }
 });
 

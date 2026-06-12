@@ -1,171 +1,108 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import axios from 'axios'
+import { Plus } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { DataTable } from '@/components/custom/data-table'
+import { GlassCard } from '@/components/custom/glass-card'
+import { PageActions } from '@/components/custom/page-header'
+import { Skeleton } from '@/components/ui/skeleton'
+import { toast } from 'sonner'
 
-export default function Academic({ user }) {
+export default function Academic() {
+  const [activeTab, setActiveTab] = useState('classes')
   const [classes, setClasses] = useState([])
   const [subjects, setSubjects] = useState([])
   const [routines, setRoutines] = useState([])
-  const [activeTab, setActiveTab] = useState('classes')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (activeTab === 'classes') {
-      fetchClasses()
-    } else if (activeTab === 'subjects') {
-      fetchSubjects()
-    } else {
-      fetchRoutines()
-    }
+    fetchData()
   }, [activeTab])
 
-  const fetchClasses = async () => {
+  const fetchData = async () => {
+    setLoading(true)
     try {
       const token = localStorage.getItem('token')
-      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/academic/classes`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      setClasses(res.data)
-    } catch (error) {
-      console.error('Error fetching classes:', error)
+      const headers = { Authorization: `Bearer ${token}` }
+      const base = process.env.NEXT_PUBLIC_API_URL
+
+      if (activeTab === 'classes') {
+        const res = await axios.get(`${base}/academic/classes`, { headers })
+        setClasses(res.data)
+      } else if (activeTab === 'subjects') {
+        const res = await axios.get(`${base}/academic/subjects`, { headers })
+        setSubjects(res.data)
+      } else {
+        const res = await axios.get(`${base}/academic/routines`, { headers })
+        setRoutines(res.data)
+      }
+    } catch {
+      toast.error('Failed to load academic data')
     } finally {
       setLoading(false)
     }
   }
 
-  const fetchSubjects = async () => {
-    try {
-      const token = localStorage.getItem('token')
-      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/academic/subjects`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      setSubjects(res.data)
-    } catch (error) {
-      console.error('Error fetching subjects:', error)
-    } finally {
-      setLoading(false)
-    }
+  const classColumns = useMemo(() => [
+    { accessorKey: 'className', header: 'Class', cell: ({ row }) => <span className="font-medium">{row.getValue('className')}</span> },
+    { accessorKey: 'section', header: 'Section', cell: ({ row }) => row.getValue('section') || '—' },
+    { id: 'teacher', header: 'Class teacher', cell: ({ row }) => row.original.classTeacher?.personalInfo?.firstName || '—' },
+    { accessorKey: 'capacity', header: 'Capacity' },
+    { accessorKey: 'currentStrength', header: 'Enrolled' },
+  ], [])
+
+  const subjectColumns = useMemo(() => [
+    { accessorKey: 'subjectCode', header: 'Code', cell: ({ row }) => <span className="font-medium">{row.getValue('subjectCode')}</span> },
+    { accessorKey: 'subjectName', header: 'Subject' },
+    { accessorKey: 'department', header: 'Department', cell: ({ row }) => row.getValue('department') || '—' },
+    { accessorKey: 'creditHours', header: 'Credits', cell: ({ row }) => row.getValue('creditHours') ?? '—' },
+  ], [])
+
+  const routineColumns = useMemo(() => [
+    { id: 'class', header: 'Class', cell: ({ row }) => row.original.class?.className || '—' },
+    { id: 'subject', header: 'Subject', cell: ({ row }) => row.original.subject?.subjectName || '—' },
+    { id: 'teacher', header: 'Teacher', cell: ({ row }) => row.original.teacher?.personalInfo?.firstName || '—' },
+    { accessorKey: 'day', header: 'Day' },
+    { id: 'time', header: 'Time', cell: ({ row }) => `${row.original.startTime || ''} – ${row.original.endTime || ''}`.trim() },
+    { accessorKey: 'room', header: 'Room', cell: ({ row }) => row.getValue('room') || '—' },
+  ], [])
+
+  const tabConfig = {
+    classes: { data: classes, columns: classColumns, searchKey: 'className', addHref: '/classes/new', addLabel: 'Add class' },
+    subjects: { data: subjects, columns: subjectColumns, searchKey: 'subjectName', addHref: '/academic/subjects/new', addLabel: 'Add subject' },
+    routines: { data: routines, columns: routineColumns, searchKey: 'day', addHref: '/academic/routines/new', addLabel: 'Add routine' },
   }
 
-  const fetchRoutines = async () => {
-    try {
-      const token = localStorage.getItem('token')
-      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/academic/routines`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      setRoutines(res.data)
-    } catch (error) {
-      console.error('Error fetching routines:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const current = tabConfig[activeTab]
 
-  if (loading) return <div>Loading...</div>
+  if (loading && classes.length === 0 && subjects.length === 0 && routines.length === 0) {
+    return (
+      <div className="page-shell space-y-4">
+        <Skeleton className="h-10 w-56 ml-auto" />
+        <Skeleton className="h-80 w-full rounded-lg" />
+      </div>
+    )
+  }
 
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <h1>Academic Management</h1>
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          {activeTab === 'classes' && <Link href="/classes/new" className="btn btn-primary">Add Class</Link>}
-          {activeTab === 'subjects' && <Link href="/academic/subjects/new" className="btn btn-primary">Add Subject</Link>}
-          {activeTab === 'routines' && <Link href="/academic/routines/new" className="btn btn-primary">Add Routine</Link>}
-          <div>
-            <button
-              className={`btn ${activeTab === 'classes' ? 'btn-primary' : 'btn-secondary'}`}
-              onClick={() => setActiveTab('classes')}
-            >
-              Classes
-            </button>
-            <button
-              className={`btn ${activeTab === 'subjects' ? 'btn-primary' : 'btn-secondary'}`}
-              onClick={() => setActiveTab('subjects')}
-            >
-              Subjects
-            </button>
-            <button
-              className={`btn ${activeTab === 'routines' ? 'btn-primary' : 'btn-secondary'}`}
-              onClick={() => setActiveTab('routines')}
-            >
-              Routines
-            </button>
-          </div>
+    <div className="page-shell space-y-4">
+      <PageActions>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant={activeTab === 'classes' ? 'default' : 'outline'} size="sm" onClick={() => setActiveTab('classes')}>Classes</Button>
+          <Button variant={activeTab === 'subjects' ? 'default' : 'outline'} size="sm" onClick={() => setActiveTab('subjects')}>Subjects</Button>
+          <Button variant={activeTab === 'routines' ? 'default' : 'outline'} size="sm" onClick={() => setActiveTab('routines')}>Routines</Button>
         </div>
-      </div>
-      {activeTab === 'classes' && (
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Class Name</th>
-              <th>Section</th>
-              <th>Class Teacher</th>
-              <th>Capacity</th>
-              <th>Current Strength</th>
-            </tr>
-          </thead>
-          <tbody>
-            {classes.map(cls => (
-              <tr key={cls._id}>
-                <td>{cls.className}</td>
-                <td>{cls.section || '-'}</td>
-                <td>{cls.classTeacher?.personalInfo?.firstName || 'N/A'}</td>
-                <td>{cls.capacity}</td>
-                <td>{cls.currentStrength}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-      {activeTab === 'subjects' && (
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Subject Code</th>
-              <th>Subject Name</th>
-              <th>Department</th>
-              <th>Credit Hours</th>
-            </tr>
-          </thead>
-          <tbody>
-            {subjects.map(subject => (
-              <tr key={subject._id}>
-                <td>{subject.subjectCode}</td>
-                <td>{subject.subjectName}</td>
-                <td>{subject.department || 'N/A'}</td>
-                <td>{subject.creditHours || '-'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-      {activeTab === 'routines' && (
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Class</th>
-              <th>Subject</th>
-              <th>Teacher</th>
-              <th>Day</th>
-              <th>Time</th>
-              <th>Room</th>
-            </tr>
-          </thead>
-          <tbody>
-            {routines.map(routine => (
-              <tr key={routine._id}>
-                <td>{routine.class?.className || 'N/A'}</td>
-                <td>{routine.subject?.subjectName || 'N/A'}</td>
-                <td>{routine.teacher?.personalInfo?.firstName || 'N/A'}</td>
-                <td>{routine.day}</td>
-                <td>{routine.startTime} - {routine.endTime}</td>
-                <td>{routine.room || '-'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+        <Link href={current.addHref}><Button><Plus className="h-4 w-4 mr-2" />{current.addLabel}</Button></Link>
+      </PageActions>
+
+      <GlassCard className="p-5">
+        {loading ? (
+          <Skeleton className="h-80 w-full" />
+        ) : (
+          <DataTable columns={current.columns} data={current.data} searchKey={current.searchKey} />
+        )}
+      </GlassCard>
     </div>
   )
 }
-

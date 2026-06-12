@@ -1,8 +1,16 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import axios from 'axios'
+import { Plus } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { DataTable } from '@/components/custom/data-table'
+import { GlassCard } from '@/components/custom/glass-card'
+import { PageActions } from '@/components/custom/page-header'
+import { Skeleton } from '@/components/ui/skeleton'
+import { toast } from 'sonner'
 
-export default function HR({ user }) {
+export default function HR() {
   const [staff, setStaff] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -17,48 +25,42 @@ export default function HR({ user }) {
         headers: { Authorization: `Bearer ${token}` }
       })
       setStaff(res.data)
-    } catch (error) {
-      console.error('Error fetching staff:', error)
+    } catch {
+      toast.error('Failed to load staff records')
     } finally {
       setLoading(false)
     }
   }
 
-  if (loading) return <div>Loading...</div>
+  const columns = useMemo(() => [
+    { accessorKey: 'staffId', header: 'Staff ID', cell: ({ row }) => <span className="font-medium">{row.getValue('staffId')}</span> },
+    { id: 'name', header: 'Name', cell: ({ row }) => {
+      const p = row.original.personalInfo
+      return p ? `${p.firstName || ''} ${p.lastName || ''}`.trim() : '—'
+    }},
+    { id: 'department', header: 'Department', cell: ({ row }) => row.original.professionalInfo?.department || '—' },
+    { id: 'designation', header: 'Designation', cell: ({ row }) => row.original.professionalInfo?.designation || '—' },
+    { accessorKey: 'status', header: 'Status', cell: ({ row }) => <Badge variant="outline">{row.getValue('status')}</Badge> },
+  ], [])
+
+  if (loading) {
+    return (
+      <div className="page-shell space-y-4">
+        <Skeleton className="h-10 w-32 ml-auto" />
+        <Skeleton className="h-80 w-full rounded-lg" />
+      </div>
+    )
+  }
 
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <h1>Human Resource</h1>
-        <Link href="/hr/new" className="btn btn-primary">Add Staff</Link>
-      </div>
-      <table className="data-table">
-        <thead>
-          <tr>
-            <th>Staff ID</th>
-            <th>Name</th>
-            <th>Designation</th>
-            <th>Department</th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {staff.map(s => (
-            <tr key={s._id}>
-              <td>{s.staffId}</td>
-              <td>{s.personalInfo?.firstName} {s.personalInfo?.lastName}</td>
-              <td>{s.professionalInfo?.designation}</td>
-              <td>{s.professionalInfo?.department || 'N/A'}</td>
-              <td>{s.personalInfo?.email || 'N/A'}</td>
-              <td>{s.personalInfo?.phone || 'N/A'}</td>
-              <td><span className={`status status-${s.status?.toLowerCase()}`}>{s.status}</span></td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="page-shell space-y-4">
+      <PageActions>
+        <Link href="/hr/new"><Button><Plus className="h-4 w-4 mr-2" />Add staff</Button></Link>
+      </PageActions>
+
+      <GlassCard className="p-5">
+        <DataTable columns={columns} data={staff} searchKey="staffId" />
+      </GlassCard>
     </div>
   )
 }
-

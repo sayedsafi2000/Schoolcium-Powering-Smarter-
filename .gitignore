@@ -1,13 +1,42 @@
+# Dependencies
 node_modules/
+**/node_modules/
+
+# Environment secrets — NEVER commit real .env files
 .env
 .env.local
-.DS_Store
-*.log
+.env.production
+.env.production.local
+# Keep .env.example (template only, no real secrets)
+!.env.example
+
+# Build output
+.next/
+**/.next/
 dist/
 build/
-.next/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
 .vscode/
 .idea/
 *.swp
 *.swo
+
+# Test coverage
 coverage/
+
+# Yarn
+.yarnrc.yml
+.yarn/
+yarn.lock
+
+# Docker volumes (local)
+mongo_data/

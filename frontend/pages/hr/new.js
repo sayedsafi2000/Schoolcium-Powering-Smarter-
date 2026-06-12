@@ -1,271 +1,298 @@
 import { useState } from 'react'
 import { useRouter } from 'next/router'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import axios from 'axios'
+import { motion } from 'framer-motion'
+import { Save, ArrowLeft, Loader2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { GlassCard, GlassCardHeader, GlassCardTitle, GlassCardContent } from '@/components/custom/glass-card'
+import { toast } from 'sonner'
+
+const staffSchema = z.object({
+  staffId: z.string().min(1, 'Staff ID is required'),
+  personalInfo: z.object({
+    firstName: z.string().min(1, 'First name is required'),
+    lastName: z.string().min(1, 'Last name is required'),
+    dateOfBirth: z.string().optional(),
+    gender: z.enum(['Male', 'Female', 'Other']),
+    phone: z.string().optional(),
+    email: z.string().email('Invalid email').optional().or(z.literal('')),
+    address: z.string().optional(),
+  }),
+  professionalInfo: z.object({
+    employeeId: z.string().optional(),
+    joiningDate: z.string(),
+    qualification: z.string().optional(),
+    experience: z.coerce.number().optional(),
+    department: z.string().optional(),
+    designation: z.string().min(1, 'Designation is required'),
+  }),
+  salary: z.object({
+    amount: z.coerce.number().optional(),
+    accountNumber: z.string().optional(),
+    bankName: z.string().optional(),
+  }),
+  status: z.enum(['Active', 'Inactive', 'On Leave', 'Resigned']),
+})
 
 export default function NewStaff() {
   const router = useRouter()
-  const [formData, setFormData] = useState({
-    staffId: '',
-    personalInfo: {
-      firstName: '',
-      lastName: '',
-      dateOfBirth: '',
-      gender: 'Male',
-      phone: '',
-      email: '',
-      address: ''
+  const [isLoading, setIsLoading] = useState(false)
+  const [activeTab, setActiveTab] = useState('personal')
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(staffSchema),
+    defaultValues: {
+      staffId: '',
+      personalInfo: {
+        firstName: '',
+        lastName: '',
+        dateOfBirth: '',
+        gender: 'Male',
+        phone: '',
+        email: '',
+        address: '',
+      },
+      professionalInfo: {
+        employeeId: '',
+        joiningDate: new Date().toISOString().split('T')[0],
+        qualification: '',
+        experience: 0,
+        department: '',
+        designation: '',
+      },
+      salary: {
+        amount: 0,
+        accountNumber: '',
+        bankName: '',
+      },
+      status: 'Active',
     },
-    professionalInfo: {
-      employeeId: '',
-      joiningDate: new Date().toISOString().split('T')[0],
-      designation: '',
-      department: '',
-      qualification: '',
-      experience: 0
-    },
-    salary: {
-      amount: 0,
-      accountNumber: '',
-      bankName: ''
-    },
-    status: 'Active'
   })
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
+  const onSubmit = async (data) => {
+    setIsLoading(true)
     try {
       const token = localStorage.getItem('token')
-      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/hr`, formData, {
-        headers: { Authorization: `Bearer ${token}` }
+      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/hr`, data, {
+        headers: { Authorization: `Bearer ${token}` },
       })
+      toast.success('Staff added successfully')
       router.push('/hr')
     } catch (error) {
-      alert('Error creating staff: ' + (error.response?.data?.message || error.message))
+      toast.error('Failed to add staff', {
+        description: error.response?.data?.message || error.message,
+      })
+    } finally {
+      setIsLoading(false)
     }
   }
 
+  const tabs = [
+    { id: 'personal', label: 'Personal Info' },
+    { id: 'professional', label: 'Professional Info' },
+    { id: 'salary', label: 'Salary Info' },
+  ]
+
+  const selectClassName =
+    'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+
   return (
-    <div className="page-container">
-      <h1>Add New Staff</h1>
-      <form onSubmit={handleSubmit} className="form">
-        <h2>Personal Information</h2>
-        <div className="form-grid">
-          <div className="form-group">
-            <label>Staff ID *</label>
-            <input
-              type="text"
-              value={formData.staffId}
-              onChange={(e) => setFormData({ ...formData, staffId: e.target.value })}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>First Name *</label>
-            <input
-              type="text"
-              value={formData.personalInfo.firstName}
-              onChange={(e) => setFormData({
-                ...formData,
-                personalInfo: { ...formData.personalInfo, firstName: e.target.value }
-              })}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Last Name *</label>
-            <input
-              type="text"
-              value={formData.personalInfo.lastName}
-              onChange={(e) => setFormData({
-                ...formData,
-                personalInfo: { ...formData.personalInfo, lastName: e.target.value }
-              })}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Date of Birth</label>
-            <input
-              type="date"
-              value={formData.personalInfo.dateOfBirth}
-              onChange={(e) => setFormData({
-                ...formData,
-                personalInfo: { ...formData.personalInfo, dateOfBirth: e.target.value }
-              })}
-            />
-          </div>
-          <div className="form-group">
-            <label>Gender</label>
-            <select
-              value={formData.personalInfo.gender}
-              onChange={(e) => setFormData({
-                ...formData,
-                personalInfo: { ...formData.personalInfo, gender: e.target.value }
-              })}
-            >
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-          <div className="form-group">
-            <label>Email</label>
-            <input
-              type="email"
-              value={formData.personalInfo.email}
-              onChange={(e) => setFormData({
-                ...formData,
-                personalInfo: { ...formData.personalInfo, email: e.target.value }
-              })}
-            />
-          </div>
-          <div className="form-group">
-            <label>Phone</label>
-            <input
-              type="tel"
-              value={formData.personalInfo.phone}
-              onChange={(e) => setFormData({
-                ...formData,
-                personalInfo: { ...formData.personalInfo, phone: e.target.value }
-              })}
-            />
-          </div>
-          <div className="form-group">
-            <label>Address</label>
-            <textarea
-              value={formData.personalInfo.address}
-              onChange={(e) => setFormData({
-                ...formData,
-                personalInfo: { ...formData.personalInfo, address: e.target.value }
-              })}
-            />
-          </div>
+    <div className="space-y-6 max-w-4xl mx-auto">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Add New Staff</h1>
+          <p className="text-muted-foreground">Fill in the staff information below</p>
         </div>
+        <Button variant="outline" onClick={() => router.back()}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back
+        </Button>
+      </div>
 
-        <h2>Professional Information</h2>
-        <div className="form-grid">
-          <div className="form-group">
-            <label>Employee ID</label>
-            <input
-              type="text"
-              value={formData.professionalInfo.employeeId}
-              onChange={(e) => setFormData({
-                ...formData,
-                professionalInfo: { ...formData.professionalInfo, employeeId: e.target.value }
-              })}
-            />
+      <GlassCard >
+        <GlassCardHeader>
+          <div className="flex gap-2 flex-wrap">
+            {tabs.map((tab) => (
+              <Button
+                key={tab.id}
+                type="button"
+                variant={activeTab === tab.id ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setActiveTab(tab.id)}
+                className={activeTab === tab.id ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}
+              >
+                {tab.label}
+              </Button>
+            ))}
           </div>
-          <div className="form-group">
-            <label>Joining Date</label>
-            <input
-              type="date"
-              value={formData.professionalInfo.joiningDate}
-              onChange={(e) => setFormData({
-                ...formData,
-                professionalInfo: { ...formData.professionalInfo, joiningDate: e.target.value }
-              })}
-            />
-          </div>
-          <div className="form-group">
-            <label>Designation *</label>
-            <input
-              type="text"
-              value={formData.professionalInfo.designation}
-              onChange={(e) => setFormData({
-                ...formData,
-                professionalInfo: { ...formData.professionalInfo, designation: e.target.value }
-              })}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Department</label>
-            <input
-              type="text"
-              value={formData.professionalInfo.department}
-              onChange={(e) => setFormData({
-                ...formData,
-                professionalInfo: { ...formData.professionalInfo, department: e.target.value }
-              })}
-            />
-          </div>
-          <div className="form-group">
-            <label>Qualification</label>
-            <input
-              type="text"
-              value={formData.professionalInfo.qualification}
-              onChange={(e) => setFormData({
-                ...formData,
-                professionalInfo: { ...formData.professionalInfo, qualification: e.target.value }
-              })}
-            />
-          </div>
-          <div className="form-group">
-            <label>Experience (Years)</label>
-            <input
-              type="number"
-              value={formData.professionalInfo.experience}
-              onChange={(e) => setFormData({
-                ...formData,
-                professionalInfo: { ...formData.professionalInfo, experience: parseInt(e.target.value) || 0 }
-              })}
-            />
-          </div>
-        </div>
+        </GlassCardHeader>
 
-        <h2>Salary Information</h2>
-        <div className="form-grid">
-          <div className="form-group">
-            <label>Salary Amount</label>
-            <input
-              type="number"
-              value={formData.salary.amount}
-              onChange={(e) => setFormData({
-                ...formData,
-                salary: { ...formData.salary, amount: parseFloat(e.target.value) || 0 }
-              })}
-            />
-          </div>
-          <div className="form-group">
-            <label>Account Number</label>
-            <input
-              type="text"
-              value={formData.salary.accountNumber}
-              onChange={(e) => setFormData({
-                ...formData,
-                salary: { ...formData.salary, accountNumber: e.target.value }
-              })}
-            />
-          </div>
-          <div className="form-group">
-            <label>Bank Name</label>
-            <input
-              type="text"
-              value={formData.salary.bankName}
-              onChange={(e) => setFormData({
-                ...formData,
-                salary: { ...formData.salary, bankName: e.target.value }
-              })}
-            />
-          </div>
-        </div>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <GlassCardContent className="space-y-6 pt-6">
+            {activeTab === 'personal' && (
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="space-y-4"
+              >
+                <GlassCardTitle className="mb-4">Personal Information</GlassCardTitle>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="staffId">Staff ID *</Label>
+                    <Input id="staffId" placeholder="STF001" {...register('staffId')} />
+                    {errors.staffId && <p className="text-sm text-destructive">{errors.staffId.message}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName">First Name *</Label>
+                    <Input id="firstName" {...register('personalInfo.firstName')} />
+                    {errors.personalInfo?.firstName && (
+                      <p className="text-sm text-destructive">{errors.personalInfo.firstName.message}</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName">Last Name *</Label>
+                    <Input id="lastName" {...register('personalInfo.lastName')} />
+                    {errors.personalInfo?.lastName && (
+                      <p className="text-sm text-destructive">{errors.personalInfo.lastName.message}</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                    <Input id="dateOfBirth" type="date" {...register('personalInfo.dateOfBirth')} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="gender">Gender</Label>
+                    <select id="gender" className={selectClassName} {...register('personalInfo.gender')}>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input id="email" type="email" {...register('personalInfo.email')} />
+                    {errors.personalInfo?.email && (
+                      <p className="text-sm text-destructive">{errors.personalInfo.email.message}</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone</Label>
+                    <Input id="phone" type="tel" {...register('personalInfo.phone')} />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="address">Address</Label>
+                    <Input id="address" {...register('personalInfo.address')} />
+                  </div>
+                </div>
+              </motion.div>
+            )}
 
-        <div className="form-group">
-          <label>Status</label>
-          <select
-            value={formData.status}
-            onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-          >
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
-            <option value="On Leave">On Leave</option>
-            <option value="Resigned">Resigned</option>
-          </select>
-        </div>
+            {activeTab === 'professional' && (
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="space-y-4"
+              >
+                <GlassCardTitle className="mb-4">Professional Information</GlassCardTitle>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="employeeId">Employee ID</Label>
+                    <Input id="employeeId" {...register('professionalInfo.employeeId')} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="joiningDate">Joining Date</Label>
+                    <Input id="joiningDate" type="date" {...register('professionalInfo.joiningDate')} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="qualification">Qualification</Label>
+                    <Input id="qualification" {...register('professionalInfo.qualification')} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="designation">Designation *</Label>
+                    <Input id="designation" {...register('professionalInfo.designation')} />
+                    {errors.professionalInfo?.designation && (
+                      <p className="text-sm text-destructive">{errors.professionalInfo.designation.message}</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="experience">Experience (Years)</Label>
+                    <Input id="experience" type="number" {...register('professionalInfo.experience')} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="department">Department</Label>
+                    <Input id="department" {...register('professionalInfo.department')} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="status">Status</Label>
+                    <select id="status" className={selectClassName} {...register('status')}>
+                      <option value="Active">Active</option>
+                      <option value="Inactive">Inactive</option>
+                      <option value="On Leave">On Leave</option>
+                      <option value="Resigned">Resigned</option>
+                    </select>
+                  </div>
+                </div>
+              </motion.div>
+            )}
 
-        <button type="submit" className="btn btn-primary">Create Staff</button>
-      </form>
+            {activeTab === 'salary' && (
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="space-y-4"
+              >
+                <GlassCardTitle className="mb-4">Salary Information</GlassCardTitle>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="salaryAmount">Salary Amount</Label>
+                    <Input id="salaryAmount" type="number" {...register('salary.amount')} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="accountNumber">Account Number</Label>
+                    <Input id="accountNumber" {...register('salary.accountNumber')} />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="bankName">Bank Name</Label>
+                    <Input id="bankName" {...register('salary.bankName')} />
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            <div className="flex justify-end gap-2 pt-6">
+              <Button type="button" variant="outline" onClick={() => router.back()}>
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isLoading}
+               
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    Create Staff
+                  </>
+                )}
+              </Button>
+            </div>
+          </GlassCardContent>
+        </form>
+      </GlassCard>
     </div>
   )
 }
-

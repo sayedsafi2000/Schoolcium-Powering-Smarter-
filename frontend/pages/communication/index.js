@@ -1,20 +1,22 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import axios from 'axios'
+import { Plus } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { DataTable } from '@/components/custom/data-table'
+import { GlassCard } from '@/components/custom/glass-card'
+import { PageActions } from '@/components/custom/page-header'
+import { Skeleton } from '@/components/ui/skeleton'
+import { toast } from 'sonner'
 
-export default function Communication({ user }) {
+export default function Communication() {
   const [announcements, setAnnouncements] = useState([])
-  const [messages, setMessages] = useState([])
-  const [activeTab, setActiveTab] = useState('announcements')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (activeTab === 'announcements') {
-      fetchAnnouncements()
-    } else {
-      fetchMessages()
-    }
-  }, [activeTab])
+    fetchAnnouncements()
+  }, [])
 
   const fetchAnnouncements = async () => {
     try {
@@ -23,86 +25,45 @@ export default function Communication({ user }) {
         headers: { Authorization: `Bearer ${token}` }
       })
       setAnnouncements(res.data)
-    } catch (error) {
-      console.error('Error fetching announcements:', error)
+    } catch {
+      toast.error('Failed to load announcements')
     } finally {
       setLoading(false)
     }
   }
 
-  const fetchMessages = async () => {
-    try {
-      const token = localStorage.getItem('token')
-      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/communication/messages`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      setMessages(res.data)
-    } catch (error) {
-      console.error('Error fetching messages:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const columns = useMemo(() => [
+    { accessorKey: 'title', header: 'Title', cell: ({ row }) => <span className="font-medium">{row.getValue('title')}</span> },
+    { accessorKey: 'content', header: 'Content', cell: ({ row }) => {
+      const text = row.getValue('content') || ''
+      return <span className="text-muted-foreground">{text.length > 80 ? `${text.slice(0, 80)}…` : text}</span>
+    }},
+    { accessorKey: 'type', header: 'Type', cell: ({ row }) => <Badge variant="outline">{row.getValue('type')}</Badge> },
+    { accessorKey: 'targetAudience', header: 'Audience', cell: ({ row }) => row.getValue('targetAudience') || '—' },
+    { id: 'publishDate', header: 'Published', cell: ({ row }) => {
+      const date = row.original.publishDate || row.original.createdAt
+      return date ? new Date(date).toLocaleDateString() : '—'
+    }},
+  ], [])
 
-  if (loading) return <div>Loading...</div>
+  if (loading) {
+    return (
+      <div className="page-shell space-y-4">
+        <Skeleton className="h-10 w-44 ml-auto" />
+        <Skeleton className="h-80 w-full rounded-lg" />
+      </div>
+    )
+  }
 
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <h1>Communication</h1>
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <Link href="/communication/new" className="btn btn-primary">New Announcement</Link>
-          <div>
-            <button
-              className={`btn ${activeTab === 'announcements' ? 'btn-primary' : 'btn-secondary'}`}
-              onClick={() => setActiveTab('announcements')}
-            >
-              Announcements
-            </button>
-            <button
-              className={`btn ${activeTab === 'messages' ? 'btn-primary' : 'btn-secondary'}`}
-              onClick={() => setActiveTab('messages')}
-            >
-              Messages
-            </button>
-          </div>
-        </div>
-      </div>
-      {activeTab === 'announcements' ? (
-        <div>
-          {announcements.map(announcement => (
-            <div key={announcement._id} className="announcement-card">
-              <h3>{announcement.title}</h3>
-              <p>{announcement.content}</p>
-              <small>{new Date(announcement.publishDate).toLocaleDateString()}</small>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>From</th>
-              <th>Subject</th>
-              <th>Message</th>
-              <th>Date</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {messages.map(message => (
-              <tr key={message._id}>
-                <td>{message.from?.username || 'N/A'}</td>
-                <td>{message.subject || '-'}</td>
-                <td>{message.content.substring(0, 50)}...</td>
-                <td>{new Date(message.createdAt).toLocaleDateString()}</td>
-                <td>{message.isRead ? 'Read' : 'Unread'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+    <div className="page-shell space-y-4">
+      <PageActions>
+        <Link href="/communication/new"><Button><Plus className="h-4 w-4 mr-2" />New announcement</Button></Link>
+      </PageActions>
+
+      <GlassCard className="p-5">
+        <DataTable columns={columns} data={announcements} searchKey="title" />
+      </GlassCard>
     </div>
   )
 }
-

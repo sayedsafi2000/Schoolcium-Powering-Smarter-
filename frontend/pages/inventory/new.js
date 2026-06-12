@@ -1,9 +1,14 @@
 import { useState } from 'react'
 import { useRouter } from 'next/router'
 import axios from 'axios'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { FormPageLayout, selectClassName } from '@/components/custom/form-page-layout'
+import { toast } from 'sonner'
 
 export default function NewInventoryItem() {
   const router = useRouter()
+  const [saving, setSaving] = useState(false)
   const [formData, setFormData] = useState({
     itemCode: '',
     itemName: '',
@@ -13,108 +18,71 @@ export default function NewInventoryItem() {
     unitPrice: 0,
     supplier: '',
     location: '',
-    minimumStock: 0
+    minimumStock: 10,
   })
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setSaving(true)
     try {
       const token = localStorage.getItem('token')
       await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/inventory/items`, formData, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       })
+      toast.success('Inventory item added')
       router.push('/inventory')
     } catch (error) {
-      alert('Error creating item: ' + (error.response?.data?.message || error.message))
+      toast.error('Failed to add item', {
+        description: error.response?.data?.message || error.message,
+      })
+    } finally {
+      setSaving(false)
     }
   }
 
   return (
-    <div className="page-container">
-      <h1>Add New Inventory Item</h1>
-      <form onSubmit={handleSubmit} className="form">
-        <div className="form-grid">
-          <div className="form-group">
-            <label>Item Code *</label>
-            <input
-              type="text"
-              value={formData.itemCode}
-              onChange={(e) => setFormData({ ...formData, itemCode: e.target.value })}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Item Name *</label>
-            <input
-              type="text"
-              value={formData.itemName}
-              onChange={(e) => setFormData({ ...formData, itemName: e.target.value })}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Category</label>
-            <input
-              type="text"
-              value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-            />
-          </div>
-          <div className="form-group">
-            <label>Quantity *</label>
-            <input
-              type="number"
-              value={formData.quantity}
-              onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 0 })}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Unit</label>
-            <input
-              type="text"
-              value={formData.unit}
-              onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-              placeholder="Piece, Box, Kg, etc."
-            />
-          </div>
-          <div className="form-group">
-            <label>Unit Price</label>
-            <input
-              type="number"
-              value={formData.unitPrice}
-              onChange={(e) => setFormData({ ...formData, unitPrice: parseFloat(e.target.value) || 0 })}
-              step="0.01"
-            />
-          </div>
-          <div className="form-group">
-            <label>Supplier</label>
-            <input
-              type="text"
-              value={formData.supplier}
-              onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
-            />
-          </div>
-          <div className="form-group">
-            <label>Location</label>
-            <input
-              type="text"
-              value={formData.location}
-              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-            />
-          </div>
-          <div className="form-group">
-            <label>Minimum Stock</label>
-            <input
-              type="number"
-              value={formData.minimumStock}
-              onChange={(e) => setFormData({ ...formData, minimumStock: parseInt(e.target.value) || 0 })}
-            />
-          </div>
+    <FormPageLayout
+      title="Add Inventory Item"
+      description="Add a new item to school inventory"
+      onBack={() => router.back()}
+      onSubmit={handleSubmit}
+      isLoading={saving}
+      submitLabel="Add Item"
+    >
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="itemCode">Item Code *</Label>
+          <Input id="itemCode" value={formData.itemCode} onChange={(e) => setFormData({ ...formData, itemCode: e.target.value })} required />
         </div>
-        <button type="submit" className="btn btn-primary">Add Item</button>
-      </form>
-    </div>
+        <div className="space-y-2">
+          <Label htmlFor="itemName">Item Name *</Label>
+          <Input id="itemName" value={formData.itemName} onChange={(e) => setFormData({ ...formData, itemName: e.target.value })} required />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="category">Category</Label>
+          <Input id="category" value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="quantity">Quantity *</Label>
+          <Input id="quantity" type="number" value={formData.quantity} onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 0 })} required />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="unit">Unit</Label>
+          <Input id="unit" value={formData.unit} onChange={(e) => setFormData({ ...formData, unit: e.target.value })} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="unitPrice">Unit Price</Label>
+          <Input id="unitPrice" type="number" step="0.01" value={formData.unitPrice} onChange={(e) => setFormData({ ...formData, unitPrice: parseFloat(e.target.value) || 0 })} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="minimumStock">Minimum Stock</Label>
+          <Input id="minimumStock" type="number" value={formData.minimumStock} onChange={(e) => setFormData({ ...formData, minimumStock: parseInt(e.target.value) || 0 })} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="location">Location</Label>
+          <Input id="location" value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} />
+        </div>
+      </div>
+    </FormPageLayout>
   )
 }
-

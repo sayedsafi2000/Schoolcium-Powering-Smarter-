@@ -1,130 +1,142 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/router'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import axios from 'axios'
+import { motion } from 'framer-motion'
+import { Save, ArrowLeft, Loader2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { GlassCard, GlassCardHeader, GlassCardTitle, GlassCardContent } from '@/components/custom/glass-card'
+import { toast } from 'sonner'
+
+const classSchema = z.object({
+  className: z.string().min(1, 'Class name is required'),
+  section: z.string().optional(),
+  capacity: z.string().optional(),
+  room: z.string().optional(),
+  classTeacher: z.string().optional(),
+})
 
 export default function NewClass() {
   const router = useRouter()
-  const [teachers, setTeachers] = useState([])
-  const [subjects, setSubjects] = useState([])
-  const [formData, setFormData] = useState({
-    className: '',
-    section: '',
-    classTeacher: '',
-    capacity: 40,
-    academicYear: '2024-2025',
-    roomNumber: ''
+  const [isLoading, setIsLoading] = useState(false)
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(classSchema),
+    defaultValues: {
+      className: '',
+      section: '',
+      capacity: '',
+      room: '',
+      classTeacher: '',
+    }
   })
 
-  useEffect(() => {
-    fetchTeachers()
-    fetchSubjects()
-  }, [])
-
-  const fetchTeachers = async () => {
+  const onSubmit = async (data) => {
+    setIsLoading(true)
     try {
       const token = localStorage.getItem('token')
-      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/teachers`, {
+      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/academic/classes`, {
+        ...data,
+        roomNumber: data.room,
+        capacity: data.capacity ? Number(data.capacity) : undefined,
+      }, {
         headers: { Authorization: `Bearer ${token}` }
       })
-      setTeachers(res.data)
-    } catch (error) {
-      console.error('Error fetching teachers:', error)
-    }
-  }
-
-  const fetchSubjects = async () => {
-    try {
-      const token = localStorage.getItem('token')
-      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/academic/subjects`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      setSubjects(res.data)
-    } catch (error) {
-      console.error('Error fetching subjects:', error)
-    }
-  }
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    try {
-      const token = localStorage.getItem('token')
-      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/academic/classes`, formData, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      toast.success('Class added successfully')
       router.push('/classes')
     } catch (error) {
-      alert('Error creating class: ' + (error.response?.data?.message || error.message))
+      toast.error('Failed to add class', {
+        description: error.response?.data?.message || error.message
+      })
+    } finally {
+      setIsLoading(false)
     }
   }
 
   return (
-    <div className="page-container">
-      <h1>Add New Class</h1>
-      <form onSubmit={handleSubmit} className="form">
-        <div className="form-grid">
-          <div className="form-group">
-            <label>Class Name *</label>
-            <input
-              type="text"
-              value={formData.className}
-              onChange={(e) => setFormData({ ...formData, className: e.target.value })}
-              placeholder="e.g., Grade 1, Class 10"
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Section</label>
-            <input
-              type="text"
-              value={formData.section}
-              onChange={(e) => setFormData({ ...formData, section: e.target.value })}
-              placeholder="e.g., A, B, C"
-            />
-          </div>
-          <div className="form-group">
-            <label>Class Teacher</label>
-            <select
-              value={formData.classTeacher}
-              onChange={(e) => setFormData({ ...formData, classTeacher: e.target.value })}
-            >
-              <option value="">Select Teacher</option>
-              {teachers.map(teacher => (
-                <option key={teacher._id} value={teacher._id}>
-                  {teacher.personalInfo?.firstName} {teacher.personalInfo?.lastName}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="form-group">
-            <label>Capacity *</label>
-            <input
-              type="number"
-              value={formData.capacity}
-              onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) || 40 })}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Academic Year</label>
-            <input
-              type="text"
-              value={formData.academicYear}
-              onChange={(e) => setFormData({ ...formData, academicYear: e.target.value })}
-              placeholder="e.g., 2024-2025"
-            />
-          </div>
-          <div className="form-group">
-            <label>Room Number</label>
-            <input
-              type="text"
-              value={formData.roomNumber}
-              onChange={(e) => setFormData({ ...formData, roomNumber: e.target.value })}
-            />
-          </div>
+    <div className="space-y-6 max-w-2xl mx-auto">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Add New Class</h1>
+          <p className="text-muted-foreground">Create a new class section</p>
         </div>
-        <button type="submit" className="btn btn-primary">Create Class</button>
-      </form>
+        <Button variant="outline" onClick={() => router.back()}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back
+        </Button>
+      </div>
+
+      <GlassCard >
+        <GlassCardHeader>
+          <GlassCardTitle>Class Information</GlassCardTitle>
+        </GlassCardHeader>
+
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <GlassCardContent className="space-y-6 pt-6">
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="space-y-4"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="className">Class Name *</Label>
+                  <Input id="className" placeholder="e.g., Class 10" {...register('className')} />
+                  {errors.className && (
+                    <p className="text-sm text-destructive">{errors.className.message}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="section">Section</Label>
+                  <Input id="section" placeholder="e.g., A" {...register('section')} />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="capacity">Capacity</Label>
+                  <Input id="capacity" type="number" placeholder="e.g., 40" {...register('capacity')} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="room">Room Number</Label>
+                  <Input id="room" placeholder="e.g., 101" {...register('room')} />
+                </div>
+              </div>
+            </motion.div>
+
+            <div className="flex justify-end gap-2 pt-6">
+              <Button type="button" variant="outline" onClick={() => router.back()}>
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isLoading}
+               
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    Save Class
+                  </>
+                )}
+              </Button>
+            </div>
+          </GlassCardContent>
+        </form>
+      </GlassCard>
     </div>
   )
 }
-

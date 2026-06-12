@@ -1,188 +1,123 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/router'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import axios from 'axios'
+import { Save, ArrowLeft, Loader2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { GlassCard, GlassCardHeader, GlassCardTitle, GlassCardContent } from '@/components/custom/glass-card'
+import { toast } from 'sonner'
+
+const examSchema = z.object({
+  examName: z.string().min(1, 'Exam name is required'),
+  examType: z.string().min(1, 'Exam type is required'),
+  startDate: z.string().min(1, 'Start date is required'),
+  endDate: z.string().optional(),
+  totalMarks: z.string().min(1, 'Total marks required'),
+  passingMarks: z.string().optional(),
+})
 
 export default function NewExam() {
   const router = useRouter()
-  const [classes, setClasses] = useState([])
-  const [subjects, setSubjects] = useState([])
-  const [formData, setFormData] = useState({
-    examName: '',
-    examType: 'Quiz',
-    class: '',
-    subject: '',
-    startDate: new Date().toISOString().split('T')[0],
-    endDate: new Date().toISOString().split('T')[0],
-    duration: 60,
-    totalMarks: 100,
-    passingMarks: 40,
-    instructions: '',
-    status: 'Scheduled'
+  const [isLoading, setIsLoading] = useState(false)
+
+  const { register, handleSubmit, formState: { errors } } = useForm({
+    resolver: zodResolver(examSchema),
   })
 
-  useEffect(() => {
-    fetchClasses()
-    fetchSubjects()
-  }, [])
-
-  const fetchClasses = async () => {
+  const onSubmit = async (data) => {
+    setIsLoading(true)
     try {
       const token = localStorage.getItem('token')
-      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/academic/classes`, {
+      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/exams`, data, {
         headers: { Authorization: `Bearer ${token}` }
       })
-      setClasses(res.data)
-    } catch (error) {
-      console.error('Error fetching classes:', error)
-    }
-  }
-
-  const fetchSubjects = async () => {
-    try {
-      const token = localStorage.getItem('token')
-      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/academic/subjects`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      setSubjects(res.data)
-    } catch (error) {
-      console.error('Error fetching subjects:', error)
-    }
-  }
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    try {
-      const token = localStorage.getItem('token')
-      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/exams`, formData, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      toast.success('Exam created successfully')
       router.push('/exams')
     } catch (error) {
-      alert('Error creating exam: ' + (error.response?.data?.message || error.message))
+      toast.error('Failed to create exam')
+    } finally {
+      setIsLoading(false)
     }
   }
 
   return (
-    <div className="page-container">
-      <h1>Create New Exam</h1>
-      <form onSubmit={handleSubmit} className="form">
-        <div className="form-grid">
-          <div className="form-group">
-            <label>Exam Name *</label>
-            <input
-              type="text"
-              value={formData.examName}
-              onChange={(e) => setFormData({ ...formData, examName: e.target.value })}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Exam Type *</label>
-            <select
-              value={formData.examType}
-              onChange={(e) => setFormData({ ...formData, examType: e.target.value })}
-              required
-            >
-              <option value="Quiz">Quiz</option>
-              <option value="Midterm">Midterm</option>
-              <option value="Final">Final</option>
-              <option value="Assignment">Assignment</option>
-              <option value="Project">Project</option>
-            </select>
-          </div>
-          <div className="form-group">
-            <label>Class *</label>
-            <select
-              value={formData.class}
-              onChange={(e) => setFormData({ ...formData, class: e.target.value })}
-              required
-            >
-              <option value="">Select Class</option>
-              {classes.map(cls => (
-                <option key={cls._id} value={cls._id}>{cls.className} {cls.section ? `- ${cls.section}` : ''}</option>
-              ))}
-            </select>
-          </div>
-          <div className="form-group">
-            <label>Subject *</label>
-            <select
-              value={formData.subject}
-              onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-              required
-            >
-              <option value="">Select Subject</option>
-              {subjects.map(subject => (
-                <option key={subject._id} value={subject._id}>{subject.subjectName}</option>
-              ))}
-            </select>
-          </div>
-          <div className="form-group">
-            <label>Start Date *</label>
-            <input
-              type="date"
-              value={formData.startDate}
-              onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>End Date *</label>
-            <input
-              type="date"
-              value={formData.endDate}
-              onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Duration (minutes)</label>
-            <input
-              type="number"
-              value={formData.duration}
-              onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) || 60 })}
-            />
-          </div>
-          <div className="form-group">
-            <label>Total Marks *</label>
-            <input
-              type="number"
-              value={formData.totalMarks}
-              onChange={(e) => setFormData({ ...formData, totalMarks: parseInt(e.target.value) || 100 })}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Passing Marks</label>
-            <input
-              type="number"
-              value={formData.passingMarks}
-              onChange={(e) => setFormData({ ...formData, passingMarks: parseInt(e.target.value) || 40 })}
-            />
-          </div>
-          <div className="form-group">
-            <label>Status</label>
-            <select
-              value={formData.status}
-              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-            >
-              <option value="Scheduled">Scheduled</option>
-              <option value="Ongoing">Ongoing</option>
-              <option value="Completed">Completed</option>
-              <option value="Cancelled">Cancelled</option>
-            </select>
-          </div>
+    <div className="space-y-6 max-w-2xl mx-auto">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Create Exam</h1>
+          <p className="text-muted-foreground">Schedule a new examination</p>
         </div>
-        <div className="form-group">
-          <label>Instructions</label>
-          <textarea
-            value={formData.instructions}
-            onChange={(e) => setFormData({ ...formData, instructions: e.target.value })}
-            rows="4"
-          />
-        </div>
-        <button type="submit" className="btn btn-primary">Create Exam</button>
-      </form>
+        <Button variant="outline" onClick={() => router.back()}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back
+        </Button>
+      </div>
+
+      <GlassCard >
+        <GlassCardHeader>
+          <GlassCardTitle>Exam Details</GlassCardTitle>
+        </GlassCardHeader>
+
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <GlassCardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="examName">Exam Name *</Label>
+                <Input id="examName" placeholder="Midterm Exam" {...register('examName')} />
+                {errors.examName && <p className="text-sm text-destructive">{errors.examName.message}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="examType">Exam Type *</Label>
+                <select id="examType" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" {...register('examType')}>
+                  <option value="">Select Type</option>
+                  <option value="Midterm">Midterm</option>
+                  <option value="Final">Final</option>
+                  <option value="Unit Test">Unit Test</option>
+                  <option value="Quiz">Quiz</option>
+                </select>
+                {errors.examType && <p className="text-sm text-destructive">{errors.examType.message}</p>}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="startDate">Start Date *</Label>
+                <Input id="startDate" type="date" {...register('startDate')} />
+                {errors.startDate && <p className="text-sm text-destructive">{errors.startDate.message}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="endDate">End Date</Label>
+                <Input id="endDate" type="date" {...register('endDate')} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="totalMarks">Total Marks *</Label>
+                <Input id="totalMarks" type="number" placeholder="100" {...register('totalMarks')} />
+                {errors.totalMarks && <p className="text-sm text-destructive">{errors.totalMarks.message}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="passingMarks">Passing Marks</Label>
+                <Input id="passingMarks" type="number" placeholder="40" {...register('passingMarks')} />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-6">
+              <Button type="button" variant="outline" onClick={() => router.back()}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Creating...</> : <><Save className="mr-2 h-4 w-4" />Create Exam</>}
+              </Button>
+            </div>
+          </GlassCardContent>
+        </form>
+      </GlassCard>
     </div>
   )
 }
-

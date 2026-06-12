@@ -1,0 +1,34 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Coolify → set "Docker Compose Location" to: docker-compose.coolify.yml
+#
+# ── Coolify UI Setup ──────────────────────────────────────────────────────────
+#
+#  1. New Project → Docker Compose → connect this GitHub repo
+#  2. Compose file: docker-compose.coolify.yml
+#
+#  3. Domains (include internal port — Traefik needs it to route correctly):
+#
+#     Service  │ Domain field in Coolify UI
+#     ─────────┼──────────────────────────────────────────────────────
+#     backend  │ https://schoolciumserver.pixelsbee.com:5000
+#     admin    │ https://schoolciumadmin.pixelsbee.com:3000
+#     website  │ https://schoolcium.pixelsbee.com:3001
+#
+#  4. Environment Variables (Coolify UI → Environment Variables tab):
+#
+#     MONGO_ROOT_USER       = schoolcium
+#     MONGO_ROOT_PASS       = <strong password>
+#     MONGODB_URI           = mongodb://schoolcium:<password>@mongo:27017/school-management?authSource=admin
+#     JWT_SECRET            = <openssl rand -base64 64>
+#     JWT_EXPIRE            = 30d
+#     CLOUDINARY_CLOUD_NAME = domn2k79e
+#     CLOUDINARY_API_KEY    = 382733537575279
+#     CLOUDINARY_API_SECRET = X8Lqo_AbMGsrSefDBzQk46aDJ40
+#     CORS_ORIGIN           = https://schoolciumadmin.pixelsbee.com,https://schoolcium.pixelsbee.com
+#     NEXT_PUBLIC_API_URL   = https://schoolciumserver.pixelsbee.com/api
+#     WEBSITE_API_URL       = https://schoolciumserver.pixelsbee.com/api
+#
+# ─────────────────────────────────────────────────────────────────────────────
+
+include:
+  - docker-compose.yml

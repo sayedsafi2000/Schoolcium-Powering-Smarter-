@@ -1,13 +1,18 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import axios from 'axios'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { FormPageLayout, selectClassName } from '@/components/custom/form-page-layout'
+import { toast } from 'sonner'
 
 export default function NewCertificate() {
   const router = useRouter()
   const [students, setStudents] = useState([])
+  const [saving, setSaving] = useState(false)
   const [formData, setFormData] = useState({
     certificateType: 'Transfer',
-    studentId: ''
+    studentId: '',
   })
 
   useEffect(() => {
@@ -18,66 +23,64 @@ export default function NewCertificate() {
     try {
       const token = localStorage.getItem('token')
       const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/students`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       })
       setStudents(res.data)
     } catch (error) {
-      console.error('Error fetching students:', error)
+      toast.error('Failed to load students')
     }
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setSaving(true)
     try {
       const token = localStorage.getItem('token')
       await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/certificates`, formData, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       })
+      toast.success('Certificate request submitted')
       router.push('/certificates')
     } catch (error) {
-      alert('Error applying for certificate: ' + (error.response?.data?.message || error.message))
+      toast.error('Failed to submit request', {
+        description: error.response?.data?.message || error.message,
+      })
+    } finally {
+      setSaving(false)
     }
   }
 
   return (
-    <div className="page-container">
-      <h1>Apply for Certificate</h1>
-      <form onSubmit={handleSubmit} className="form">
-        <div className="form-grid">
-          <div className="form-group">
-            <label>Certificate Type *</label>
-            <select
-              value={formData.certificateType}
-              onChange={(e) => setFormData({ ...formData, certificateType: e.target.value })}
-              required
-            >
-              <option value="Transfer">Transfer Certificate</option>
-              <option value="Character">Character Certificate</option>
-              <option value="Bonafide">Bonafide Certificate</option>
-              <option value="Migration">Migration Certificate</option>
-              <option value="Diploma">Diploma</option>
-              <option value="Degree">Degree</option>
-            </select>
-          </div>
-          <div className="form-group">
-            <label>Student *</label>
-            <select
-              value={formData.studentId}
-              onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
-              required
-            >
-              <option value="">Select Student</option>
-              {students.map(student => (
-                <option key={student._id} value={student._id}>
-                  {student.personalInfo?.firstName} {student.personalInfo?.lastName} - {student.studentId}
-                </option>
-              ))}
-            </select>
-          </div>
+    <FormPageLayout
+      title="Apply for Certificate"
+      description="Submit a certificate request for a student"
+      onBack={() => router.back()}
+      onSubmit={handleSubmit}
+      isLoading={saving}
+      submitLabel="Submit Request"
+    >
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="certificateType">Certificate Type *</Label>
+          <select id="certificateType" className={selectClassName} value={formData.certificateType} onChange={(e) => setFormData({ ...formData, certificateType: e.target.value })} required>
+            <option value="Transfer">Transfer Certificate</option>
+            <option value="Character">Character Certificate</option>
+            <option value="Bonafide">Bonafide Certificate</option>
+            <option value="Migration">Migration Certificate</option>
+          </select>
         </div>
-        <button type="submit" className="btn btn-primary">Submit Application</button>
-      </form>
-    </div>
+        <div className="space-y-2">
+          <Label htmlFor="studentId">Student *</Label>
+          <select id="studentId" className={selectClassName} value={formData.studentId} onChange={(e) => setFormData({ ...formData, studentId: e.target.value })} required>
+            <option value="">Select Student</option>
+            {students.map(student => (
+              <option key={student._id} value={student._id}>
+                {student.personalInfo?.firstName} {student.personalInfo?.lastName} - {student.studentId}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+    </FormPageLayout>
   )
 }
-

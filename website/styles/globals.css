@@ -1,0 +1,84 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    @apply text-slate-800 bg-white antialiased;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  /* Layout */
+  .container-school { @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8; }
+
+  /* Buttons */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 bg-emerald-600 text-white
+           px-6 py-3 rounded-2xl font-bold text-sm transition-all duration-200
+           hover:bg-emerald-700 hover:-translate-y-0.5 hover:shadow-lg
+           hover:shadow-emerald-200 active:translate-y-0 active:shadow-none;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 bg-blue-700 text-white
+           px-6 py-3 rounded-2xl font-bold text-sm transition-all duration-200
+           hover:bg-blue-800 hover:-translate-y-0.5 hover:shadow-lg
+           hover:shadow-blue-200 active:translate-y-0;
+  }
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 border-2 border-emerald-600
+           text-emerald-700 px-6 py-3 rounded-2xl font-bold text-sm transition-all
+           hover:bg-emerald-600 hover:text-white hover:-translate-y-0.5 active:translate-y-0;
+  }
+  .btn-white {
+    @apply inline-flex items-center justify-center gap-2 bg-white text-emerald-700
+           px-6 py-3 rounded-2xl font-bold text-sm transition-all duration-200
+           hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0;
+  }
+  .btn-outline-white {
+    @apply inline-flex items-center justify-center gap-2 border-2 border-white/70
+           text-white px-6 py-3 rounded-2xl font-bold text-sm transition-all
+           hover:bg-white hover:text-emerald-700 hover:-translate-y-0.5 active:translate-y-0;
+  }
+
+  /* Clay Card — the signature style */
+  .clay-card {
+    @apply bg-white rounded-3xl border border-slate-100
+           shadow-[0_4px_24px_-4px_rgba(0,0,0,0.08)]
+           hover:shadow-[0_8px_40px_-8px_rgba(0,0,0,0.14)]
+           hover:-translate-y-1 transition-all duration-300;
+  }
+
+  /* Icon bubble */
+  .icon-bubble {
+    @apply flex items-center justify-center rounded-2xl shrink-0;
+  }
+
+  /* Section label badge */
+  .section-label {
+    @apply inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest
+           px-3 py-1.5 rounded-full;
+  }
+
+  /* Page hero */
+  .page-hero-wrap {
+    @apply relative overflow-hidden py-20 md:py-24;
+  }
+
+  /* Badge */
+  .badge {
+    @apply inline-block text-xs font-bold px-3 py-1 rounded-full;
+  }
+
+  /* Input base */
+  .input-base {
+    @apply w-full px-4 py-3 border border-slate-200 rounded-2xl text-sm bg-white
+           focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-transparent
+           placeholder:text-slate-400 transition-all;
+  }
+}

@@ -1,13 +1,20 @@
 {
-  "name": "school-management",
+  "name": "schoolcium-powering-smarter",
   "version": "1.0.0",
-  "description": "Full-stack School Management System",
+  "description": "Schoolcium — Full Stack School Management System",
   "scripts": {
-    "dev:frontend": "cd frontend && npm run dev",
-    "dev:backend": "cd backend && npm run dev",
-    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install"
+    "dev:backend":  "cd backend  && npm run dev",
+    "dev:admin":    "cd frontend && npm run dev",
+    "dev:website":  "cd website  && npm run dev",
+
+    "docker:local": "docker compose -f docker-compose.yml -f docker-compose.local.yml up --build",
+    "docker:down":  "docker compose down",
+    "docker:logs":  "docker compose logs -f",
+    "docker:build": "docker compose build",
+
+    "install:all":  "cd backend && npm install && cd ../frontend && npm install && cd ../website && npm install"
   },
-  "keywords": ["school", "management", "react", "express", "mongodb"],
+  "keywords": ["school", "management", "nextjs", "express", "mongodb", "docker"],
   "author": "",
   "license": "ISC"
 }
