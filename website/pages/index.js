@@ -116,20 +116,47 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Right — Info card cluster */}
-            <div className="hidden lg:grid grid-cols-2 gap-4">
-              {[
-                { emoji: '🏆', title: 'Top Results',     desc: '98% pass rate in SSC examinations',       bg: 'bg-white' },
-                { emoji: '👨‍🏫', title: 'Expert Faculty',  desc: '30+ qualified and experienced teachers',  bg: 'bg-brand-50' },
-                { emoji: '📚', title: 'Full Curriculum',  desc: 'NCTB-aligned Pre-Primary to Class 10',     bg: 'bg-blue-50' },
-                { emoji: '🌿', title: 'Safe Campus',      desc: 'Clean, disciplined & welcoming environment',bg: 'bg-amber-50' },
-              ].map(({ emoji, title, desc, bg }, i) => (
-                <div key={title} className={`${bg} rounded-3xl p-5 shadow-clay ${i === 1 ? 'mt-6' : ''} ${i === 2 ? '-mt-3' : ''}`}>
-                  <span className="text-3xl block mb-2">{emoji}</span>
-                  <p className="font-bold text-slate-900 text-sm">{title}</p>
-                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">{desc}</p>
+            {/* Right — Real school images grid */}
+            <div className="hidden lg:grid grid-cols-2 gap-3">
+              {/* Main big image */}
+              <div className="col-span-2 rounded-3xl overflow-hidden h-52 shadow-xl">
+                <img
+                  src="https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800&q=80"
+                  alt="Students in classroom"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              {/* Two smaller images */}
+              <div className="rounded-2xl overflow-hidden h-36 shadow-lg">
+                <img
+                  src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=400&q=80"
+                  alt="School books and education"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="rounded-2xl overflow-hidden h-36 shadow-lg">
+                <img
+                  src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400&q=80"
+                  alt="Students studying"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              {/* Info badge overlay */}
+              <div className="col-span-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-emerald-400 flex items-center justify-center">
+                    <span className="text-white font-extrabold text-sm">✓</span>
+                  </div>
+                  <div>
+                    <p className="text-white font-bold text-sm">Ideal Vision Academy</p>
+                    <p className="text-emerald-200 text-xs">Badaghat, Sunamganj, Bangladesh</p>
+                  </div>
                 </div>
-              ))}
+                <div className="text-right">
+                  <p className="text-white font-extrabold text-lg">98%</p>
+                  <p className="text-emerald-300 text-xs">Pass Rate</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -152,24 +179,32 @@ export default function HomePage() {
       <section className="py-20 bg-white">
         <div className="container-school">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            {/* Left: Stat boxes */}
+            {/* Left: Real image + Stat boxes */}
             <div className="relative">
+              {/* Main school image */}
+              <div className="rounded-3xl overflow-hidden h-72 shadow-xl mb-4">
+                <img
+                  src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&q=80"
+                  alt="School building and students"
+                  className="w-full h-full object-cover"
+                />
+              </div>
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gradient-to-br from-brand-600 to-brand-800 rounded-4xl p-8 text-white shadow-glow-green">
-                  <p className="text-5xl font-extrabold">800+</p>
-                  <p className="text-emerald-200 text-sm mt-2 font-medium">Happy Students</p>
+                <div className="bg-gradient-to-br from-brand-600 to-brand-800 rounded-3xl p-6 text-white shadow-glow-green">
+                  <p className="text-4xl font-extrabold">800+</p>
+                  <p className="text-emerald-200 text-sm mt-1 font-medium">Happy Students</p>
                 </div>
-                <div className="bg-gradient-to-br from-blue-700 to-blue-900 rounded-4xl p-8 text-white mt-8">
-                  <p className="text-5xl font-extrabold">30+</p>
-                  <p className="text-blue-200 text-sm mt-2 font-medium">Qualified Teachers</p>
+                <div className="bg-gradient-to-br from-blue-700 to-blue-900 rounded-3xl p-6 text-white">
+                  <p className="text-4xl font-extrabold">30+</p>
+                  <p className="text-blue-200 text-sm mt-1 font-medium">Qualified Teachers</p>
                 </div>
-                <div className="bg-amber-400 rounded-4xl p-8 text-amber-900 -mt-4">
-                  <p className="text-5xl font-extrabold">15+</p>
-                  <p className="text-amber-800 text-sm mt-2 font-medium">Years of Service</p>
+                <div className="bg-amber-400 rounded-3xl p-6 text-amber-900">
+                  <p className="text-4xl font-extrabold">15+</p>
+                  <p className="text-amber-800 text-sm mt-1 font-medium">Years of Service</p>
                 </div>
-                <div className="bg-slate-900 rounded-4xl p-8 text-white mt-4">
-                  <p className="text-5xl font-extrabold">98%</p>
-                  <p className="text-slate-400 text-sm mt-2 font-medium">Pass Rate</p>
+                <div className="bg-slate-900 rounded-3xl p-6 text-white">
+                  <p className="text-4xl font-extrabold">98%</p>
+                  <p className="text-slate-400 text-sm mt-1 font-medium">Pass Rate</p>
                 </div>
               </div>
             </div>
